@@ -1,6 +1,42 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+// import { hkGrotesk, iransansweb } from '@/config/fonts';
 import "./globals.css";
+
+import localFont from "next/font/local";
+
+const iransansweb = localFont({
+  src: [
+    {
+      path: "../../public/fonts/IRANSans/woff2/IRANSansWeb_Light.woff2",
+      weight: "300",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/IRANSans/woff2/IRANSansWeb.woff2",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/IRANSans/woff2/IRANSansWeb_Medium.woff2",
+      weight: "500",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/IRANSans/woff2/IRANSansWeb_Bold.woff2",
+      weight: "600",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/IRANSans/woff2/IRANSansWeb_Bold.woff2",
+      weight: "700",
+      style: "normal",
+    },
+  ],
+  // family: "iransansweb",
+  variable: "--font-iransansweb",
+  display: "swap",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +60,9 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="fa" dir="rtl" 
+      // className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={iransansweb.variable}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
