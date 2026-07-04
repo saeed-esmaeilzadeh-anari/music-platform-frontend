@@ -8,27 +8,27 @@ import localFont from "next/font/local";
 const iransansweb = localFont({
   src: [
     {
-      path: "../public/IRANSansWeb_Light.woff2",
+      path: "../../public/IRANSansWeb_Light.woff2",
       weight: "300",
       style: "normal",
     },
     {
-      path: "../public/IRANSansWeb.woff2",
+      path: "../../public/IRANSansWeb.woff2",
       weight: "400",
       style: "normal",
     },
     {
-      path: "../public/IRANSansWeb_Medium.woff2",
+      path: "../../public/IRANSansWeb_Medium.woff2",
       weight: "500",
       style: "normal",
     },
     {
-      path: "../public/IRANSansWeb_Bold.woff2",
+      path: "../../public/IRANSansWeb_Bold.woff2",
       weight: "600",
       style: "normal",
     },
     {
-      path: "../public/IRANSansWeb_Bold.woff2",
+      path: "../../public/IRANSansWeb_Bold.woff2",
       weight: "700",
       style: "normal",
     },
