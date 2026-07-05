@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 // import { hkGrotesk, iransansweb } from '@/config/fonts';
 import "./globals.css";
+import { RootProviders } from "@/providers";
 
 import localFont from "next/font/local";
 
@@ -60,11 +61,14 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="fa" dir="rtl" 
+      lang="fa"
+      dir="rtl"
       // className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       className={iransansweb.variable}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <RootProviders>{children}</RootProviders>
+      </body>
     </html>
   );
 }

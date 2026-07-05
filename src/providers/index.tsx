@@ -16,6 +16,7 @@ interface RootProvidersProps {
  *   AuthProvider    — uses useQuery internally, so must be inside QueryProvider
  */
 export function RootProviders({ children }: RootProvidersProps) {
+  console.log("ROOT PROVIDER LOADED");
   return (
     <QueryProvider>
       <ToastProvider>
