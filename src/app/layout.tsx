@@ -64,7 +64,8 @@ export default function RootLayout({
       lang="fa"
       dir="rtl"
       // className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      className={iransansweb.variable}
+      className={`${iransansweb.variable} dark`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <RootProviders>{children}</RootProviders>

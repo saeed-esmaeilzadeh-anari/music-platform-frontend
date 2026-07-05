@@ -1,27 +1,39 @@
-"use client";
+import type { Metadata } from 'next';
+import { AuthWavePanel } from '@/components/auth/auth-wave-panel';
+import { AuthFormShell } from '@/components/auth/auth-form-shell';
+import { LoginForm } from '@/components/auth/login-form';
+import { ROUTES } from '@/lib/constants';
 
-import { LoginForm } from "@/components/auth/login-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+export const metadata: Metadata = {
+  title: 'Sign in',
+  description: 'Sign in to your Soundwave account.',
+};
 
 export default function LoginPage() {
-  console.log("login rendered");
   return (
-    <div className="flex min-h-screen items-center justify-center bg-muted/30 p-6">
-      <Card className="w-full max-w-md shadow-lg">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-center text-2xl font-bold">
-            Welcome Back
-          </CardTitle>
+    <main className="flex min-h-svh bg-background">
+      {/* ── Left: atmospheric panel with waveform ── */}
+      <AuthWavePanel
+        heading="Music lives here."
+        subheading="Stream millions of tracks, follow your favourite artists, and build playlists that move with you."
+        features={[
+          'Lossless audio, no compromises',
+          'Offline listening on every device',
+          'Artist tools and real-time stats',
+          'Personalised recommendations',
+        ]}
+      />
 
-          <p className="text-center text-sm text-muted-foreground">
-            Sign in to your account
-          </p>
-        </CardHeader>
-
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-      </Card>
-    </div>
+      {/* ── Right: form panel ── */}
+      <AuthFormShell
+        title="Welcome back"
+        description="Enter your credentials to continue."
+        footerPrompt="Don't have an account?"
+        footerLinkLabel="Create one"
+        footerLinkHref={ROUTES.REGISTER}
+      >
+        <LoginForm />
+      </AuthFormShell>
+    </main>
   );
 }

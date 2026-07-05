@@ -1,43 +1,132 @@
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useId } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Mail } from 'lucide-react';
+import Link from 'next/link';
 
-import { loginSchema, type LoginFormValues } from "@/lib/validators";
+import { loginSchema, type LoginFormValues } from '@/lib/validators';
+import { useLogin } from '@/hooks/use-auth';
+import { extractApiError } from '@/lib/utils';
+import { ROUTES } from '@/lib/constants';
 
-import { Form } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
-
-import { FormInput } from "@/components/ui/form-input";
-import { PasswordInput } from "@/components/ui/password-input";
-
-import { useLogin } from "@/hooks/use-auth";
+import { FormField, FormInput, FormError } from '@/components/ui/form-field';
+import { PasswordInput } from '@/components/ui/password-input';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ApiErrorAlert } from '@/components/ui/api-error-alert';
 
 export function LoginForm() {
+  const emailId = useId();
+  const passwordId = useId();
+  const rememberMeId = useId();
+
   const loginMutation = useLogin();
 
-  const form = useForm<LoginFormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
-
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: '', password: '' },
+    mode: 'onBlur',          // validate on blur, not on every keystroke
   });
 
-  function onSubmit(values: LoginFormValues) {
-    loginMutation.mutate(values);
-  }
+  // Surface the API-level error (wrong credentials, suspended account, etc.)
+  const apiError = loginMutation.error ? extractApiError(loginMutation.error) : null;
+
+  const onSubmit = async (values: LoginFormValues) => {
+    await loginMutation.mutateAsync({
+      email: values.email.trim().toLowerCase(),
+      password: values.password,
+    });
+  };
 
   return (
-    <Form {...form}>
-      <form className="space-y-5" onSubmit={form.handleSubmit(onSubmit)}>
-        {/* Email */}
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className="space-y-5"
+      aria-label="Sign in form"
+    >
+      {/* API-level error — shown above the fields */}
+      {apiError && (
+        <ApiErrorAlert message={apiError} />
+      )}
 
-        {/* Password */}
+      {/* Email */}
+      <FormField
+        label="Email"
+        error={errors.email?.message}
+        required
+        id={emailId}
+      >
+        <FormInput
+          id={emailId}
+          type="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          placeholder="you@example.com"
+          error={!!errors.email}
+          leftIcon={<Mail className="h-4 w-4" />}
+          {...register('email')}
+        />
+        <FormError message={errors.email?.message} />
+      </FormField>
 
-        {/* Button */}
-      </form>
-    </Form>
+      {/* Password */}
+      <FormField
+        label="Password"
+        error={errors.password?.message}
+        required
+        id={passwordId}
+      >
+        <PasswordInput
+          id={passwordId}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          error={!!errors.password}
+          {...register('password')}
+        />
+        <FormError message={errors.password?.message} />
+      </FormField>
+
+      {/* Remember me + Forgot password row */}
+      <div className="flex items-center justify-between">
+        <Checkbox
+          id={rememberMeId}
+          label="Remember me"
+          defaultChecked
+        />
+        <Link
+          href="/forgot-password"
+          className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
+        >
+          Forgot password?
+        </Link>
+      </div>
+
+      {/* Submit */}
+      <Button
+        type="submit"
+        variant="primary"
+        size="xl"
+        className="w-full"
+        loading={isSubmitting || loginMutation.isPending}
+        disabled={isSubmitting || loginMutation.isPending}
+      >
+        Sign in
+      </Button>
+
+      {/* Demo credentials hint — useful during development */}
+      {process.env.NODE_ENV === 'development' && (
+        <p className="text-center text-xs text-muted-foreground/50">
+          Dev: artist@musicstream.dev / Artist@12345
+        </p>
+      )}
+    </form>
   );
 }
