@@ -12,6 +12,7 @@ import { STALE_TIME } from '@/lib/constants';
 import { useToast } from '@/providers/toast-provider';
 import { extractApiError } from '@/lib/utils';
 import type { CreateSubscriptionDto, PaginationQuery, RequestUploadDto, UpdateUserDto } from '@/types';
+import { useEffect } from 'react';
 
 // ─── User / Profile ───────────────────────────────────────────────────────────
 
@@ -160,18 +161,47 @@ export function useUpload() {
   });
 }
 
+// export function useUploadStatus(id: string, enabled = true) {
+//   const { error } = useToast();
+//   return useQuery({
+//     queryKey: queryKeys.uploads.detail(id),
+//     queryFn: () => uploadService.getUploadStatus(id),
+//     enabled: !!id && enabled,
+//     // Poll every 3s while status is PROCESSING or PENDING
+//     refetchInterval: (query) => {
+//       const status = query.state.data?.status;
+//       if (status === 'PROCESSING' || status === 'PENDING') return 3_000;
+//       return false;
+//     },
+//     onError: (err: unknown) => error('Upload status error', extractApiError(err)),
+//   } as Parameters<typeof useQuery>[0]);
+// }
+
+
 export function useUploadStatus(id: string, enabled = true) {
-  const { error } = useToast();
-  return useQuery({
+  const { error: toastError } = useToast();
+
+  const query = useQuery({
     queryKey: queryKeys.uploads.detail(id),
     queryFn: () => uploadService.getUploadStatus(id),
     enabled: !!id && enabled,
-    // Poll every 3s while status is PROCESSING or PENDING
+
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      if (status === 'PROCESSING' || status === 'PENDING') return 3_000;
+
+      if (status === "PROCESSING" || status === "PENDING") {
+        return 3000;
+      }
+
       return false;
     },
-    onError: (err: unknown) => error('Upload status error', extractApiError(err)),
-  } as Parameters<typeof useQuery>[0]);
+  });
+
+  useEffect(() => {
+    if (query.error) {
+      toastError("Upload status error", extractApiError(query.error));
+    }
+  }, [query.error, toastError]);
+
+  return query;
 }
