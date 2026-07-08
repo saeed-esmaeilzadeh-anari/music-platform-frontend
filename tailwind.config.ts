@@ -95,6 +95,7 @@ const config: Config = {
         shimmer: "shimmer 2s linear infinite",
       },
       fontFamily: {
+        iransansweb: ["var(--font-iransansweb)", "sans-serif"],
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],
         display: [
           "var(--font-cal-sans)",
@@ -115,7 +116,7 @@ const config: Config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  // plugins: [require("tailwindcss-animate")],
 };
 
 export default config;

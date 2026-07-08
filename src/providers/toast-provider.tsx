@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { createContext, useCallback, useContext, useReducer } from "react";
-import * as ToastPrimitive from "@radix-ui/react-toast";
-import { cn } from "@/lib/utils";
+import { createContext, useCallback, useContext, useReducer } from 'react';
+import * as ToastPrimitive from '@radix-ui/react-toast';
+import { cn } from '@/lib/utils';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type ToastVariant = "default" | "success" | "error" | "warning";
+type ToastVariant = 'default' | 'success' | 'error' | 'warning';
 
 interface Toast {
   id: string;
@@ -17,13 +17,13 @@ interface Toast {
 }
 
 type ToastAction =
-  | { type: "ADD"; toast: Toast }
-  | { type: "REMOVE"; id: string };
+  | { type: 'ADD'; toast: Toast }
+  | { type: 'REMOVE'; id: string };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
 
 interface ToastContextValue {
-  toast: (opts: Omit<Toast, "id">) => void;
+  toast: (opts: Omit<Toast, 'id'>) => void;
   success: (title: string, description?: string) => void;
   error: (title: string, description?: string) => void;
   warning: (title: string, description?: string) => void;
@@ -35,9 +35,9 @@ const ToastContext = createContext<ToastContextValue | null>(null);
 
 function toastReducer(state: Toast[], action: ToastAction): Toast[] {
   switch (action.type) {
-    case "ADD":
-      return [...state.slice(-4), action.toast]; // cap at 5 visible
-    case "REMOVE":
+    case 'ADD':
+      return [...state.slice(-4), action.toast];
+    case 'REMOVE':
       return state.filter((t) => t.id !== action.id);
   }
 }
@@ -45,36 +45,36 @@ function toastReducer(state: Toast[], action: ToastAction): Toast[] {
 // ─── Provider ────────────────────────────────────────────────────────────────
 
 const VARIANT_STYLES: Record<ToastVariant, string> = {
-  default: "bg-card border border-border text-foreground",
-  success: "bg-emerald-950 border border-emerald-800 text-emerald-100",
-  error: "bg-red-950 border border-red-800 text-red-100",
-  warning: "bg-amber-950 border border-amber-800 text-amber-100",
+  default: 'bg-card border border-border text-foreground',
+  success: 'bg-emerald-950 border border-emerald-800 text-emerald-100',
+  error:   'bg-red-950 border border-red-800 text-red-100',
+  warning: 'bg-amber-950 border border-amber-800 text-amber-100',
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
   const [toasts, dispatch] = useReducer(toastReducer, []);
 
-  const toast = useCallback((opts: Omit<Toast, "id">) => {
+  const toast = useCallback((opts: Omit<Toast, 'id'>) => {
     const id = Math.random().toString(36).slice(2);
-    dispatch({ type: "ADD", toast: { ...opts, id } });
+    dispatch({ type: 'ADD', toast: { ...opts, id } });
   }, []);
 
   const success = useCallback(
     (title: string, description?: string) =>
-      toast({ title, description, variant: "success", duration: 4000 }),
-    [toast]
+      toast({ title, description, variant: 'success', duration: 4000 }),
+    [toast],
   );
 
   const error = useCallback(
     (title: string, description?: string) =>
-      toast({ title, description, variant: "error", duration: 6000 }),
-    [toast]
+      toast({ title, description, variant: 'error', duration: 6000 }),
+    [toast],
   );
 
   const warning = useCallback(
     (title: string, description?: string) =>
-      toast({ title, description, variant: "warning", duration: 5000 }),
-    [toast]
+      toast({ title, description, variant: 'warning', duration: 5000 }),
+    [toast],
   );
 
   return (
@@ -87,12 +87,12 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             key={t.id}
             duration={t.duration ?? 4000}
             onOpenChange={(open) => {
-              if (!open) dispatch({ type: "REMOVE", id: t.id });
+              if (!open) dispatch({ type: 'REMOVE', id: t.id });
             }}
             className={cn(
-              "pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg p-4 shadow-lg",
-              "data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity",
-              VARIANT_STYLES[t.variant]
+              'pointer-events-auto flex w-full max-w-sm items-start gap-3 rounded-lg p-4 shadow-lg',
+              'data-[state=open]:animate-fade-in data-[state=closed]:opacity-0 transition-opacity',
+              VARIANT_STYLES[t.variant],
             )}
           >
             <div className="flex-1 min-w-0">
@@ -119,23 +119,8 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
-// export function useToast(): ToastContextValue {
-//   const ctx = useContext(ToastContext);
-//   if (!ctx) throw new Error('useToast must be used inside <ToastProvider>');
-//   return ctx;
-// }
-
 export function useToast(): ToastContextValue {
   const ctx = useContext(ToastContext);
-
-  if (!ctx) {
-    return {
-      toast: () => {},
-      success: () => {},
-      error: () => {},
-      warning: () => {},
-    };
-  }
-
+  if (!ctx) throw new Error('useToast must be used inside <ToastProvider>');
   return ctx;
 }

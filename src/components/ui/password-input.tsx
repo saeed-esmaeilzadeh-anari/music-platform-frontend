@@ -7,24 +7,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 
+// export interface PasswordInputProps
+//   extends React.InputHTMLAttributes<HTMLInputElement> {
+//   label: string;
+//   error?: string;
+//   required?: boolean;
+// }
+
 export interface PasswordInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string;
   error?: string;
-  required?: boolean;
 }
 
 const PasswordInput = React.forwardRef<HTMLInputElement, PasswordInputProps>(
-  ({ label, error, required, className, id, ...props }, ref) => {
+  ({  error, required, className, id, ...props }, ref) => {
     const [showPassword, setShowPassword] = React.useState(false);
 
     return (
       <div className="space-y-2">
-        <Label htmlFor={id}>
+        {/* <Label htmlFor={id}>
           {label}
 
           {required && <span className="ml-1 text-red-500">*</span>}
-        </Label>
+        </Label> */}
 
         <div className="relative">
           <Input

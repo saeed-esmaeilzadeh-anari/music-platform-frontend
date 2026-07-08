@@ -88,7 +88,7 @@ export function LoginForm() {
           id={passwordId}
           autoComplete="current-password"
           placeholder="••••••••"
-          error={!!errors.password}
+          error={errors.password?.message}
           {...register('password')}
         />
         <FormError message={errors.password?.message} />

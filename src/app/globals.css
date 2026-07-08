@@ -1,131 +1,319 @@
+/* ─── Tailwind v4 import (replaces @tailwind base/components/utilities) ─── */
 @import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
-@custom-variant dark (&:is(.dark *));
+/* ─── Animation plugin (replaces tailwindcss-animate require in config) ─── */
+/* @plugin "tw-animate-css"; */
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  /* --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono); */
-  --font-iransansweb:var(--font-iransansweb);
-  --font-heading: var(--font-iransansweb);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+/* ─── Tailwind v4 CSS-first theme (replaces tailwind.config.ts extend) ─────
+   All values previously in theme.extend are now declared here.
+   v4 uses @theme to register design tokens as CSS custom properties that
+   Tailwind's utility classes read directly. No JS config file needed.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@theme {
+  /* ── Colors — mapped to CSS vars so runtime theme switching works ── */
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  /* Music-specific semantic color tokens */
+  --color-player-bg: hsl(var(--player-bg));
+  --color-sidebar-bg: hsl(var(--sidebar-bg));
+  --color-track-hover: hsl(var(--track-hover));
+  --color-waveform-active: hsl(var(--waveform-active));
+  --color-waveform-inactive: hsl(var(--waveform-inactive));
+
+  /* ── Border radius ── */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ── Font families ── */
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-inter), system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+
+  /* ── Spacing / layout tokens ── */
+  --height-player: 80px;
+  --height-sidebar: calc(100vh - 80px);
+  --height-content-area: calc(100vh - 80px);
+  --width-sidebar: 240px;
+  --width-sidebar-collapsed: 72px;
+
+  /* ── Animations (replaces theme.extend.keyframes + theme.extend.animation) ── */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-in-right: slide-in-right 0.3s ease-out;
+  --animate-pulse-waveform: pulse-waveform 1s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s linear infinite;
 }
+
+/* ─── CSS custom properties — design tokens used by @theme above ─────────────
+   Music streaming platform — dark by default.
+   All hsl() values (channel-only) so Tailwind's opacity modifier works:
+   bg-primary/50 → background-color: hsl(var(--primary) / 0.5)
+   ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Background scale — deep navy-black */
+  --background: 224 20% 5%; /* #0A0B12 */
+  --card: 224 18% 8%; /* #111320 */
+  --popover: 224 18% 8%;
+
+  /* Foreground */
+  --foreground: 220 14% 96%; /* #F4F5F9 */
+  --card-foreground: 220 14% 96%;
+  --popover-foreground: 220 14% 96%;
+
+  /* Primary — electric violet */
+  --primary: 263 70% 58%; /* #7C3AED-ish */
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary — muted surface */
+  --secondary: 224 15% 13%; /* #1A1D2E */
+  --secondary-foreground: 220 14% 70%;
+
+  /* Muted */
+  --muted: 224 15% 13%;
+  --muted-foreground: 220 8% 48%; /* #72758A */
+
+  /* Accent — bright violet for hover/active */
+  --accent: 263 85% 68%; /* #A855F7 */
+  --accent-foreground: 0 0% 100%;
+
+  /* Destructive */
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+
+  /* Borders & inputs */
+  --border: 224 15% 14%; /* #1E2133 */
+  --input: 224 15% 12%; /* #171929 */
+  --ring: 263 70% 58%;
+
+  /* Radius */
+  --radius: 0.5rem;
+
+  /* Music-specific tokens */
+  --player-bg: 224 25% 6%;
+  --sidebar-bg: 224 20% 6%;
+  --track-hover: 224 15% 11%;
+  --waveform-active: 263 85% 68%;
+  --waveform-inactive: 224 15% 22%;
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
+/* ─── Base resets ─────────────────────────────────────────────────────────── */
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  html {
-    @apply font-iransansweb;
+
+  /* Focus visible — violet outline, never hidden */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-1 ring-offset-background;
   }
+
+  /* Scrollbar — subtle, dark */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 99px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+
+  /* Reduced motion — respect user preference */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* ─── Utility classes ─────────────────────────────────────────────────────── */
+
+@layer utilities {
+  /* Gradient text — used in auth panel heading */
+  .text-gradient-violet {
+    background: linear-gradient(135deg, #a855f7 0%, #7c3aed 50%, #6d28d9 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Violet glow — signature effect for waveform bars */
+  .glow-violet {
+    box-shadow: 0 0 20px hsl(263 85% 68% / 0.4),
+      0 0 60px hsl(263 85% 68% / 0.15);
+  }
+
+  /* Shimmer skeleton */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--secondary)) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200px 100%;
+    animation: shimmer 1.5s linear infinite;
+  }
+
+  /* Truncate with ellipsis */
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* ─── Keyframe animations ─────────────────────────────────────────────────── */
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-waveform {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(1.5);
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200px 0;
+  }
+  to {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+/* ─── Waveform bar animations (auth left panel) ───────────────────────────── */
+
+@keyframes wave-1 {
+  0%,
+  100% {
+    height: 18px;
+  }
+  50% {
+    height: 52px;
+  }
+}
+@keyframes wave-2 {
+  0%,
+  100% {
+    height: 30px;
+  }
+  33% {
+    height: 60px;
+  }
+  66% {
+    height: 20px;
+  }
+}
+@keyframes wave-3 {
+  0%,
+  100% {
+    height: 44px;
+  }
+  25% {
+    height: 16px;
+  }
+  75% {
+    height: 64px;
+  }
+}
+@keyframes wave-4 {
+  0%,
+  100% {
+    height: 24px;
+  }
+  40% {
+    height: 56px;
+  }
+  80% {
+    height: 18px;
+  }
+}
+@keyframes wave-5 {
+  0%,
+  100% {
+    height: 38px;
+  }
+  20% {
+    height: 18px;
+  }
+  60% {
+    height: 48px;
+  }
+}
+
+.wave-bar-1 {
+  animation: wave-1 1.4s ease-in-out infinite;
+}
+.wave-bar-2 {
+  animation: wave-2 1.1s ease-in-out infinite 0.15s;
+}
+.wave-bar-3 {
+  animation: wave-3 1.6s ease-in-out infinite 0.05s;
+}
+.wave-bar-4 {
+  animation: wave-4 1.2s ease-in-out infinite 0.25s;
+}
+.wave-bar-5 {
+  animation: wave-5 1.5s ease-in-out infinite 0.1s;
 }

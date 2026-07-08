@@ -41,7 +41,10 @@ export type RegisterFormValues = z.infer<typeof registerSchema>;
 export const updateProfileSchema = z.object({
   firstName: z.string().max(50).optional(),
   lastName: z.string().max(50).optional(),
-  avatarUrl: z.string().url("Must be a valid URL").optional().or(z.literal("")),
+  // Zod v4: use z.union instead of .or() for clearer intent
+  avatarUrl: z
+    .union([z.string().url("Must be a valid URL"), z.literal("")])
+    .optional(),
 });
 export type UpdateProfileFormValues = z.infer<typeof updateProfileSchema>;
 

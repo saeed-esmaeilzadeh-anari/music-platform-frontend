@@ -1,14 +1,15 @@
-"use client";
+'use client';
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
-import { authService } from "@/services/auth.service";
-import { useAuthStore } from "@/stores/auth.store";
-import { useToast } from "@/providers/toast-provider";
-import { extractApiError } from "@/lib/utils";
-import { queryKeys } from "@/lib/constants/query-keys";
-import { ROUTES } from "@/lib/constants";
-import type { LoginDto, RegisterDto } from "@/types";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
+import { authService } from '@/services/auth.service';
+import { useAuthStore } from '@/stores/auth.store';
+import { useToast } from '@/providers/toast-provider';
+import { extractApiError } from '@/lib/utils';
+import { queryKeys } from '@/lib/constants/query-keys';
+import { ROUTES } from '@/lib/constants';
+import { getRefreshToken } from '@/lib/api/http-client';
+import type { LoginDto, RegisterDto } from '@/types';
 
 // ─── useLogin ─────────────────────────────────────────────────────────────────
 
@@ -23,10 +24,10 @@ export function useLogin() {
     onSuccess: (data) => {
       login(data.user, data.accessToken, data.refreshToken);
       qc.invalidateQueries({ queryKey: queryKeys.users.me() });
-      success("Welcome back!");
+      success('Welcome back!');
       router.push(ROUTES.BROWSE);
     },
-    onError: (err) => error("Login failed", extractApiError(err)),
+    onError: (err) => error('Login failed', extractApiError(err)),
   });
 }
 
@@ -38,27 +39,26 @@ export function useRegister() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: (dto: Omit<RegisterDto, "confirmPassword">) =>
-      authService.register(dto),
+    mutationFn: (dto: Omit<RegisterDto, 'confirmPassword'>) => authService.register(dto),
     onSuccess: (data) => {
       login(data.user, data.accessToken, data.refreshToken);
-      success("Account created!", "Welcome to Soundwave.");
+      success('Account created!', 'Welcome to Soundwave.');
       router.push(ROUTES.BROWSE);
     },
-    onError: (err) => error("Registration failed", extractApiError(err)),
+    onError: (err) => error('Registration failed', extractApiError(err)),
   });
 }
 
 // ─── useLogout ────────────────────────────────────────────────────────────────
 
 export function useLogout() {
-  const { logout, isAuthenticated } = useAuthStore();
+  const { logout } = useAuthStore();
   const qc = useQueryClient();
   const router = useRouter();
 
   return useMutation({
     mutationFn: () => {
-      const { getRefreshToken } = require("@/lib/api/http-client");
+      // Use the named import — no require() needed
       const refreshToken = getRefreshToken();
       if (!refreshToken) return Promise.resolve();
       return authService.logout({ refreshToken });
@@ -84,13 +84,14 @@ export function useLogoutAll() {
     onSuccess: () => {
       logout();
       qc.clear();
-      success("Signed out everywhere");
+      success('Signed out everywhere');
       router.push(ROUTES.LOGIN);
     },
   });
 }
 
-// ─── useCurrentUser ───────────────────────────────────────────────────────────
+// ─── Selectors ────────────────────────────────────────────────────────────────
+
 /** Returns the in-memory user from Zustand — no network call */
 export function useCurrentUser() {
   return useAuthStore((s) => s.user);

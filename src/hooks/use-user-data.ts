@@ -12,7 +12,6 @@ import { STALE_TIME } from '@/lib/constants';
 import { useToast } from '@/providers/toast-provider';
 import { extractApiError } from '@/lib/utils';
 import type { CreateSubscriptionDto, PaginationQuery, RequestUploadDto, UpdateUserDto } from '@/types';
-import { useEffect } from 'react';
 
 // ─── User / Profile ───────────────────────────────────────────────────────────
 
@@ -44,7 +43,7 @@ export function useNotifications(query?: PaginationQuery) {
     queryKey: queryKeys.notifications.all(query),
     queryFn: () => notificationsService.findOwn(query),
     staleTime: STALE_TIME.SHORT,
-    refetchInterval: 30_000, // poll every 30s
+    refetchInterval: 30_000,
   });
 }
 
@@ -88,8 +87,7 @@ export function useActiveSubscription() {
     queryKey: queryKeys.subscription.active(),
     queryFn: () => subscriptionService.getActive(),
     staleTime: STALE_TIME.INSTANT,
-    // 404 when no subscription → treat as null, don't throw
-    retry: (_, err) => {
+    retry: (_, err: unknown) => {
       const status = (err as { response?: { status?: number } }).response?.status;
       return status !== 404;
     },
@@ -101,7 +99,6 @@ export function useCreateCheckoutSession() {
   return useMutation({
     mutationFn: (dto: CreateSubscriptionDto) => subscriptionService.createCheckout(dto),
     onSuccess: (data) => {
-      // Redirect to Stripe Checkout
       window.location.href = data.checkoutUrl;
     },
     onError: (err) => error('Checkout failed', extractApiError(err)),
@@ -161,47 +158,16 @@ export function useUpload() {
   });
 }
 
-// export function useUploadStatus(id: string, enabled = true) {
-//   const { error } = useToast();
-//   return useQuery({
-//     queryKey: queryKeys.uploads.detail(id),
-//     queryFn: () => uploadService.getUploadStatus(id),
-//     enabled: !!id && enabled,
-//     // Poll every 3s while status is PROCESSING or PENDING
-//     refetchInterval: (query) => {
-//       const status = query.state.data?.status;
-//       if (status === 'PROCESSING' || status === 'PENDING') return 3_000;
-//       return false;
-//     },
-//     onError: (err: unknown) => error('Upload status error', extractApiError(err)),
-//   } as Parameters<typeof useQuery>[0]);
-// }
-
-
 export function useUploadStatus(id: string, enabled = true) {
-  const { error: toastError } = useToast();
-
-  const query = useQuery({
+  return useQuery({
     queryKey: queryKeys.uploads.detail(id),
     queryFn: () => uploadService.getUploadStatus(id),
     enabled: !!id && enabled,
-
+    // Poll every 3s while status is PROCESSING or PENDING
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-
-      if (status === "PROCESSING" || status === "PENDING") {
-        return 3000;
-      }
-
+      if (status === 'PROCESSING' || status === 'PENDING') return 3_000;
       return false;
     },
   });
-
-  useEffect(() => {
-    if (query.error) {
-      toastError("Upload status error", extractApiError(query.error));
-    }
-  }, [query.error, toastError]);
-
-  return query;
 }
