@@ -174,3 +174,11 @@ export const searchSchema = z.object({
   type: z.enum(searchEntityValues).optional(),
 });
 export type SearchFormValues = z.infer<typeof searchSchema>;
+
+// ─── Forgot password ──────────────────────────────────────────────────────────
+// The backend has no /auth/forgot-password endpoint yet.
+// Schema validates client input; the form shows a confirmation state.
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Enter the email address linked to your account"),
+});
+export type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
