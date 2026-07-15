@@ -12,7 +12,7 @@ interface UIState {
   openMobileDrawer: () => void;
   closeMobileDrawer: () => void;
 
-  // Now-playing queue panel (optional expandable panel)
+   // Now-playing queue panel (optional expandable panel)
   queuePanelOpen: boolean;
   toggleQueuePanel: () => void;
 }
@@ -23,11 +23,9 @@ export const useUIStore = create<UIState>()(
       sidebarCollapsed: false,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
-
       mobileDrawerOpen: false,
       openMobileDrawer: () => set({ mobileDrawerOpen: true }),
       closeMobileDrawer: () => set({ mobileDrawerOpen: false }),
-
       queuePanelOpen: false,
       toggleQueuePanel: () => set((s) => ({ queuePanelOpen: !s.queuePanelOpen })),
     }),
