@@ -294,3 +294,9 @@
 .wave-bar-5 {
   animation: wave-5 1.5s ease-in-out infinite 0.1s;
 }
+
+/* ─── Mobile drawer slide-in from left ──────────────────────────────────────── */
+@keyframes slide-in-left {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
