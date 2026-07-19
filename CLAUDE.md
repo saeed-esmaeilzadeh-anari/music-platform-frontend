@@ -230,33 +230,3 @@ Created 3 files
 Create QueuePanel — slides in from right, shows current queue with drag-to-reorder, remove, and recently played tab
 Create MiniPlayer — compact floating player for when user scrolls away from main player on mobile
 Create FullscreenPlayer — expanded mobile player with waveform visualization, all controlsDone
-
-14050428
-
-Now wire everything together — the keyboard shortcut toast display, the `(app)` layout with QueuePanel, MiniPlayer, and FullscreenPlayer, then the keyboard hints component:
-
-Create useKeyboardShortcuts hook — exposes shortcut map for the hints UI, no new logic (AudioProvider already handles keydown)
-
-Create KeyboardShortcutsHint — modal triggered by ? key, lists all shortcuts with Kbd styling
-
-Create PlayerShell — composes QueuePanel, MiniPlayer, FullscreenPlayer, KeyboardShortc
-
-Now update the `(app)/layout.tsx` to include QueuePanel alongside the main content, and MiniPlayer + keyboard hints:
-
-Update (app) layout with QueuePanel in content row, MiniPlayer and KeyboardShortcutsHint as overlays
-
-The `QueuePanel` renders `null` when closed (guarded by `if (!queuePanelOpen) return null`) so it's safe to always include in the layout — no layout thrash when closed. Now fix the `providers/index.ts` — it's a `.ts` file containing JSX which will break:
-
-Rename providers/index.ts to .tsx since it contains JSX
-
-Now verify the audio engine seek detection logic is sound — the current approach (comparing `audio.currentTime` vs `store.progressSec`) is fragile. Let me fix it with an explicit intent flag:
-
-Fix AudioEngine: return-early after track load, fix AbortError handling, add SSR guard in constructor
-
-Now add the `setIsLoading` method was missing in the original player store hooks — verify the store has it, then add a `usePlayerAudio` hook for components that need derived audio state:
-
-Create usePlayer hook — ergonomic selector-based hook for components, avoids re-renders from unrelated state changes
-
-Now update `TrackRow` and `TrackCard` to use the new `usePlayTrack` hook for clean play integration:
-
-Update TrackRow and TrackCard to use usePlayTrack hook — clean, no direct store coupling in components
