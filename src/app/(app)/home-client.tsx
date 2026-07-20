@@ -37,6 +37,8 @@ function CardGrid({ children }: { children: React.ReactNode }) {
 }
 
 export function HomeClient() {
+
+  console.log("HomeClient");
   const { data: tracks,   isLoading: tracksLoading  } = useTracks({ limit: 6, status: 'PUBLISHED' });
   const { data: albums,   isLoading: albumsLoading  } = useAlbums({ limit: 6 });
   const { data: artists,  isLoading: artistsLoading } = useArtists({ limit: 6 });

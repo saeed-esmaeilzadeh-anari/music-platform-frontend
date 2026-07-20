@@ -260,3 +260,27 @@ Create usePlayer hook — ergonomic selector-based hook for components, avoids r
 Now update `TrackRow` and `TrackCard` to use the new `usePlayTrack` hook for clean play integration:
 
 Update TrackRow and TrackCard to use usePlayTrack hook — clean, no direct store coupling in components
+
+14040429
+
+Let me read everything before writing a single line.
+
+Ran 4 commands
+
+I have everything I need. The existing PlaylistClient is a thin stub with raw emoji icons, no edit modal, no share, no proper track rows, and no usePlayTrack. I now write only the missing files — no touching existing hooks, services, types, or validators.
+
+Missing files to create:
+
+playlist-edit-modal.tsx — edit title/description/visibility
+playlist-track-row.tsx — full row reusing usePlayTrack, with remove + reorder
+playlist-add-tracks-modal.tsx — search & add tracks with debounce
+playlist-share-button.tsx — copy link / visibility toggle
+playlist-header.tsx — hero with cover, metadata, inline-edit trigger
+playlist-actions-bar.tsx — play all, like, edit, share, delete
+Fully rebuilt playlist-client.tsx — composes all the above
+
+Created 2 files
+
+PlaylistTrackRow — full production row with usePlayTrack, reorder up/down, remove, add-to-other-playlist context menu
+
+PlaylistHeader — hero section with cover, metadata, inline-editable title for owners

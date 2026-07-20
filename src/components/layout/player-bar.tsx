@@ -5,8 +5,8 @@ import Link from 'next/link';
 import {
   Play, Pause, SkipBack, SkipForward,
   Shuffle, Repeat, Repeat1,
-  Volume, Volume1, Volume2, VolumeX,
-  ListMusic, Heart, Maximize2, ChevronUp,
+  Volume1, Volume2, VolumeX,
+  ListMusic, Heart,
 } from 'lucide-react';
 import { cn, formatDuration } from '@/lib/utils';
 import { usePlayerStore } from '@/stores/player.store';
@@ -79,8 +79,7 @@ function VolumeControl({ className }: { className?: string }) {
   const display = isMuted ? 0 : volume;
 
   const VolumeIcon = isMuted || volume === 0 ? VolumeX
-    : volume < 0.3 ? Volume
-    : volume < 0.7 ? Volume1
+    : volume < 0.5 ? Volume1
     : Volume2;
 
   return (
@@ -271,6 +270,8 @@ export function PlayerBar() {
       className="relative z-30 border-t border-border bg-player-bg"
       aria-label="Music player"
     >
+      {/* Sentinel: MiniPlayer uses IntersectionObserver on this element */}
+      <div id="player-bar-sentinel" className="absolute -top-px left-0 h-px w-full" aria-hidden />
       {/* Mobile strip (< md) */}
       <MobilePlayerStrip />
 
