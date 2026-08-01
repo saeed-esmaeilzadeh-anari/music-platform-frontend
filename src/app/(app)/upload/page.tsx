@@ -1,7 +1,8 @@
-// src/app/(app)/upload/page.tsx
+import type { Metadata } from 'next';
+import { UploadClient } from './upload-client';
 
-import { UploadTrackForm } from "@/components/upload/upload-track-form";
+export const metadata: Metadata = { title: 'Upload' };
 
 export default function UploadPage() {
-  return <UploadTrackForm />;
+  return <UploadClient />;
 }

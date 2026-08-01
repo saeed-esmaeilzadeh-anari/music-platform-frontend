@@ -2,152 +2,90 @@
 
 import { useState, useCallback, useRef } from 'react';
 
-export interface DropZoneValidationError {
+export interface DropZoneError {
   type: 'mime' | 'size' | 'multiple';
   message: string;
 }
 
 interface UseDropZoneOptions {
-  accept: string[];           // MIME types e.g. ['audio/mpeg', 'audio/wav']
+  accept: string[];
   maxSizeBytes: number;
   multiple?: boolean;
   onFiles: (files: File[]) => void;
-  onError?: (error: DropZoneValidationError) => void;
-}
-
-export interface DropZoneState {
-  isDragging: boolean;
-  isOver: boolean;
+  onError?: (err: DropZoneError) => void;
 }
 
 export function useDropZone({
-  accept,
-  maxSizeBytes,
-  multiple = false,
-  onFiles,
-  onError,
+  accept, maxSizeBytes, multiple = false, onFiles, onError,
 }: UseDropZoneOptions) {
   const [isDragging, setIsDragging] = useState(false);
-  const [isOver, setIsOver]         = useState(false);
-  const inputRef                    = useRef<HTMLInputElement>(null);
-  const dragCounter                 = useRef(0);
+  const [isOver,     setIsOver]     = useState(false);
+  const counter  = useRef(0);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const validate = useCallback(
-    (files: File[]): File[] | null => {
-      if (!multiple && files.length > 1) {
-        onError?.({ type: 'multiple', message: 'Only one file can be uploaded at a time.' });
+  const validate = useCallback((files: File[]): File[] | null => {
+    if (!multiple && files.length > 1) {
+      onError?.({ type: 'multiple', message: 'Only one file at a time.' });
+      return null;
+    }
+    for (const file of files) {
+      const ok = accept.includes(file.type) ||
+        accept.some(a => file.name.toLowerCase().endsWith('.' + a.split('/')[1]));
+      if (!ok) {
+        onError?.({ type: 'mime', message: `"${file.name}" is not a supported type. Accepted: ${accept.join(', ')}.` });
         return null;
       }
-      for (const file of files) {
-        // MIME check — also accept by extension as fallback
-        const mimeOk =
-          accept.includes(file.type) ||
-          accept.some((a) => {
-            const ext = a.split('/')[1];
-            return file.name.toLowerCase().endsWith(`.${ext}`);
-          });
-        if (!mimeOk) {
-          onError?.({
-            type: 'mime',
-            message: `"${file.name}" is not a supported file type. Accepted: ${accept.join(', ')}.`,
-          });
-          return null;
-        }
-        if (file.size > maxSizeBytes) {
-          const mb = Math.round(maxSizeBytes / 1024 / 1024);
-          onError?.({
-            type: 'size',
-            message: `"${file.name}" exceeds the ${mb} MB size limit.`,
-          });
-          return null;
-        }
+      if (file.size > maxSizeBytes) {
+        const mb = Math.round(maxSizeBytes / 1024 / 1024);
+        onError?.({ type: 'size', message: `"${file.name}" exceeds the ${mb} MB limit.` });
+        return null;
       }
-      return files;
-    },
-    [accept, maxSizeBytes, multiple, onError],
-  );
-
-  const handleDragEnter = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current++;
-    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      setIsDragging(true);
-      setIsOver(true);
     }
+    return files;
+  }, [accept, maxSizeBytes, multiple, onError]);
+
+  const onDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    counter.current++;
+    if (e.dataTransfer.items?.length) { setIsDragging(true); setIsOver(true); }
   }, []);
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current--;
-    if (dragCounter.current === 0) {
-      setIsDragging(false);
-      setIsOver(false);
-    }
+  const onDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    if (--counter.current === 0) { setIsDragging(false); setIsOver(false); }
   }, []);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    e.dataTransfer.dropEffect = 'copy';
+  const onDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
   }, []);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      dragCounter.current = 0;
-      setIsDragging(false);
-      setIsOver(false);
+  const onDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation();
+    counter.current = 0; setIsDragging(false); setIsOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    if (!files.length) return;
+    const valid = validate(files);
+    if (valid) onFiles(valid);
+  }, [validate, onFiles]);
 
-      const files = Array.from(e.dataTransfer.files);
-      if (!files.length) return;
+  const onInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? []);
+    e.target.value = '';
+    if (!files.length) return;
+    const valid = validate(files);
+    if (valid) onFiles(valid);
+  }, [validate, onFiles]);
 
-      const valid = validate(files);
-      if (valid) onFiles(valid);
-    },
-    [validate, onFiles],
-  );
-
-  const handleInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files ?? []);
-      if (!files.length) return;
-      const valid = validate(files);
-      if (valid) onFiles(valid);
-      // Reset so the same file can be re-selected after an error
-      e.target.value = '';
-    },
-    [validate, onFiles],
-  );
-
-  const openFilePicker = useCallback(() => {
-    inputRef.current?.click();
-  }, []);
-
-  const rootProps = {
-    onDragEnter: handleDragEnter,
-    onDragLeave: handleDragLeave,
-    onDragOver:  handleDragOver,
-    onDrop:      handleDrop,
-    onClick:     openFilePicker,
-  };
-
-  const inputProps = {
-    ref:      inputRef,
-    type:     'file' as const,
-    accept:   accept.join(','),
-    multiple,
-    onChange: handleInputChange,
-    className: 'sr-only',
-    tabIndex: -1,
-    'aria-hidden': true as const,
-  };
+  const open = useCallback(() => inputRef.current?.click(), []);
 
   return {
-    rootProps,
-    inputProps,
-    state: { isDragging, isOver } as DropZoneState,
+    rootProps: { onDragEnter, onDragLeave, onDragOver, onDrop, onClick: open },
+    inputProps: {
+      ref: inputRef, type: 'file' as const, accept: accept.join(','),
+      multiple, onChange: onInputChange, className: 'sr-only', tabIndex: -1,
+      'aria-hidden': true as const,
+    },
+    isDragging,
+    isOver,
   };
 }

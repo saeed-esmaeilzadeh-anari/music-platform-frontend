@@ -4,14 +4,22 @@ import { useState, useCallback } from 'react';
 import { uploadService } from '@/services/upload.service';
 import type { UploadAssetType, UploadResponse } from '@/types';
 
-export type UploadState =
-  | { phase: 'idle' }
-  | { phase: 'presigning' }
-  | { phase: 'uploading'; progress: number }
-  | { phase: 'confirming' }
-  | { phase: 'processing'; uploadId: string }
-  | { phase: 'done'; result: UploadResponse }
-  | { phase: 'error'; message: string };
+export type UploadPhase =
+  | 'idle'
+  | 'presigning'
+  | 'uploading'
+  | 'confirming'
+  | 'processing'
+  | 'done'
+  | 'error';
+
+export interface UploadState {
+  phase: UploadPhase;
+  progress: number;   // 0-100, only meaningful during 'uploading'
+  uploadId?: string;  // set after confirm, used for polling
+  result?: UploadResponse;
+  error?: string;
+}
 
 interface UseFileUploadOptions {
   assetType: UploadAssetType;
@@ -19,66 +27,49 @@ interface UseFileUploadOptions {
   onDone?: (result: UploadResponse) => void;
 }
 
-/**
- * useFileUpload
- *
- * Orchestrates the full 3-step upload pipeline for a single file:
- *   1. POST /uploads/presign  → get S3 presigned URL
- *   2. PUT  <presignedUrl>    → upload file bytes directly to S3
- *   3. POST /uploads/confirm  → notify backend, trigger processing
- *
- * Exposes granular `UploadState` so the UI can show step-level feedback
- * (presigning, uploading with %, confirming, processing) rather than a
- * single binary loading state.
- */
 export function useFileUpload({ assetType, trackId, onDone }: UseFileUploadOptions) {
-  const [state, setState] = useState<UploadState>({ phase: 'idle' });
+  const [state, setState] = useState<UploadState>({ phase: 'idle', progress: 0 });
 
-  const upload = useCallback(
-    async (file: File): Promise<UploadResponse | null> => {
-      try {
-        // ── Step 1: request presigned URL ──────────────────────────────────
-        setState({ phase: 'presigning' });
-        const presigned = await uploadService.requestPresignedUrl({
-          assetType,
-          originalName: file.name,
-          mimeType:     file.type,
-          trackId,
-        });
+  const upload = useCallback(async (file: File): Promise<UploadResponse | null> => {
+    try {
+      // Step 1 — presign
+      setState({ phase: 'presigning', progress: 0 });
+      const presigned = await uploadService.requestPresignedUrl({
+        assetType,
+        originalName: file.name,
+        mimeType:     file.type,
+        trackId,
+      });
 
-        // ── Step 2: PUT directly to S3 ──────────────────────────────────────
-        setState({ phase: 'uploading', progress: 0 });
-        await uploadService.uploadToS3(presigned.uploadUrl, file, (pct) => {
-          setState({ phase: 'uploading', progress: pct });
-        });
+      // Step 2 — PUT to S3
+      setState({ phase: 'uploading', progress: 0 });
+      await uploadService.uploadToS3(presigned.uploadUrl, file, (pct) => {
+        setState({ phase: 'uploading', progress: pct });
+      });
 
-        // ── Step 3: confirm ─────────────────────────────────────────────────
-        setState({ phase: 'confirming' });
-        const result = await uploadService.confirmUpload({
-          uploadId:  presigned.uploadId,
-          sizeBytes: file.size,
-        });
+      // Step 3 — confirm
+      setState({ phase: 'confirming', progress: 100 });
+      const result = await uploadService.confirmUpload({
+        uploadId:  presigned.uploadId,
+        sizeBytes: file.size,
+      });
 
-        // Audio files go into BullMQ processing; images are READY immediately
-        if (result.status === 'PROCESSING') {
-          setState({ phase: 'processing', uploadId: result.id });
-        } else {
-          setState({ phase: 'done', result });
-        }
-
-        onDone?.(result);
-        return result;
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : 'Upload failed. Please try again.';
-        setState({ phase: 'error', message });
-        return null;
+      if (result.status === 'PROCESSING') {
+        setState({ phase: 'processing', progress: 100, uploadId: result.id, result });
+      } else {
+        setState({ phase: 'done', progress: 100, result });
       }
-    },
-    [assetType, trackId, onDone],
-  );
 
-  const reset = useCallback(() => setState({ phase: 'idle' }), []);
+      onDone?.(result);
+      return result;
+    } catch (err) {
+      const error = err instanceof Error ? err.message : 'Upload failed. Please try again.';
+      setState({ phase: 'error', progress: 0, error });
+      return null;
+    }
+  }, [assetType, trackId, onDone]);
+
+  const reset = useCallback(() => setState({ phase: 'idle', progress: 0 }), []);
 
   return { state, upload, reset };
 }
