@@ -284,3 +284,33 @@ Created 2 files
 PlaylistTrackRow — full production row with usePlayTrack, reorder up/down, remove, add-to-other-playlist context menu
 
 PlaylistHeader — hero section with cover, metadata, inline-editable title for owners
+
+14050511
+
+Now I build every file clean, reading from what I know exists on disk:
+
+Write use-file-upload hook
+
+continue
+
+Now the drop-zone hook and all upload components:
+
+Write use-drop-zone hook
+
+continue
+
+Now all the upload components and page in one clean pass:
+
+Write UploadProgressBar component
+
+continue.
+
+Write DropZone component
+
+Now the image preview, all three forms, and the page:
+
+Write ImagePreview and EmptyCover components
+
+Now all three forms:
+
+Write UploadTrackForm

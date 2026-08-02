@@ -11,27 +11,22 @@ interface ImagePreviewProps {
 
 export function ImagePreview({ file, onRemove, className }: ImagePreviewProps) {
   const url = URL.createObjectURL(file);
-
   return (
-    <div className={cn('relative overflow-hidden rounded-md bg-secondary border border-border', className)}>
+    <div className={cn('relative overflow-hidden rounded-md bg-secondary border border-border group', className)}>
       <img
         src={url}
-        alt="Cover preview"
+        alt="Preview"
         className="h-full w-full object-cover"
         onLoad={() => URL.revokeObjectURL(url)}
       />
-      {/* Replace overlay */}
       <button
         type="button"
         onClick={onRemove}
         aria-label="Remove image"
-        className={cn(
-          'absolute inset-0 flex flex-col items-center justify-center gap-1.5',
-          'bg-black/0 hover:bg-black/60 transition-colors group',
-        )}
+        className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/0 hover:bg-black/60 transition-colors"
       >
-        <X className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden />
-        <span className="text-xs font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity">
+        <X className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+        <span className="text-[11px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity">
           Remove
         </span>
       </button>
@@ -39,15 +34,15 @@ export function ImagePreview({ file, onRemove, className }: ImagePreviewProps) {
   );
 }
 
-interface EmptyCoverProps {
-  className?: string;
-}
-
-export function EmptyCover({ className }: EmptyCoverProps) {
+export function EmptyCover({ className, round = false }: { className?: string; round?: boolean }) {
   return (
-    <div className={cn('flex flex-col items-center justify-center gap-2 rounded-md bg-secondary border border-dashed border-border text-muted-foreground', className)}>
-      <ImageIcon className="h-8 w-8 opacity-40" aria-hidden />
-      <p className="text-xs">Cover art</p>
+    <div className={cn(
+      'flex flex-col items-center justify-center gap-1.5 bg-secondary border border-dashed border-border text-muted-foreground',
+      round ? 'rounded-full' : 'rounded-md',
+      className,
+    )}>
+      <ImageIcon className="h-7 w-7 opacity-30" />
+      <p className="text-[10px]">Cover art</p>
     </div>
   );
 }

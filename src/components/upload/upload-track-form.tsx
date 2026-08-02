@@ -1,244 +1,309 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Music2, CheckCircle2, ExternalLink } from 'lucide-react';
-import Link from 'next/link';
+import { useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Music2, CheckCircle2, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
-import { createTrackSchema, type CreateTrackFormValues } from '@/lib/validators';
-import { useCreateTrack } from '@/hooks/use-tracks';
-import { useFileUpload } from '@/hooks/use-file-upload';
-import { useArtistProfile } from '@/hooks/use-artist-profile';
-import { useGenres } from '@/hooks/use-catalog';
-import { useToast } from '@/providers/toast-provider';
-
-import { DropZone } from './drop-zone';
-import { ImagePreview, EmptyCover } from './image-preview';
-import { UploadProgressBar } from './upload-progress-bar';
-import { FormField, FormInput, FormError } from '@/components/ui/form-field';
-import { Button } from '@/components/ui/button';
-
+import {
+  createTrackSchema,
+  type CreateTrackFormValues,
+} from "@/lib/validators";
+import { useCreateTrack } from "@/hooks/use-tracks";
+import { useFileUpload } from "@/hooks/use-file-upload";
+import { useArtists } from "@/hooks/use-artists";
+import { useAuthStore } from "@/stores/auth.store";
+import { useGenres } from "@/hooks/use-catalog";
+import { useToast } from "@/providers/toast-provider";
+import { DropZone } from "./drop-zone";
+import { ImagePreview, EmptyCover } from "./image-preview";
+import { UploadProgressBar } from "./upload-progress-bar";
 import {
   ACCEPTED_AUDIO_TYPES,
   ACCEPTED_IMAGE_TYPES,
   MAX_AUDIO_SIZE_BYTES,
   MAX_IMAGE_SIZE_BYTES,
   ROUTES,
-} from '@/lib/constants';
-import { cn } from '@/lib/utils';
+} from "@/lib/constants";
+import { cn } from "@/lib/utils";
 
-// ─── Step indicator ───────────────────────────────────────────────────────────
-
-function StepBadge({ n, done, active }: { n: number; done: boolean; active: boolean }) {
+function Step({
+  n,
+  done,
+  active,
+}: {
+  n: number;
+  done: boolean;
+  active: boolean;
+}) {
   return (
-    <div className={cn(
-      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors',
-      done   ? 'bg-emerald-500 text-white' :
-      active ? 'bg-primary text-primary-foreground' :
-               'bg-secondary border border-border text-muted-foreground',
-    )}>
-      {done ? '✓' : n}
+    <div
+      className={cn(
+        "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+        done
+          ? "bg-emerald-500 text-white"
+          : active
+          ? "bg-primary text-primary-foreground"
+          : "bg-secondary border border-border text-muted-foreground"
+      )}
+    >
+      {done ? "✓" : n}
     </div>
   );
 }
 
-// ─── UploadTrackForm ──────────────────────────────────────────────────────────
-
 export function UploadTrackForm() {
-  const { artist, isLoading: artistLoading } = useArtistProfile();
-  const { data: genresData }                 = useGenres();
-  const createTrack                          = useCreateTrack(artist?.id ?? '');
-  const { error: toastError }                = useToast();
+  const { user } = useAuthStore();
+  const { data: artists } = useArtists({ limit: 100 });
+  const { data: genres } = useGenres();
+  const { error } = useToast();
 
-  // Files
-  const [audioFile,  setAudioFile]  = useState<File | null>(null);
-  const [coverFile,  setCoverFile]  = useState<File | null>(null);
-  const [trackId,    setTrackId]    = useState<string | null>(null);
-  const [done,       setDone]       = useState(false);
+  const artist = artists?.items.find((a) => a.userId === user?.id) ?? null;
 
-  // Upload pipelines
+  const createTrack = useCreateTrack(artist?.id ?? "");
+
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [trackId, setTrackId] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
+
+  const coverUpload = useFileUpload({
+    assetType: "TRACK_COVER",
+    trackId: trackId ?? undefined,
+    onDone: () => setDone(true),
+  });
+
   const audioUpload = useFileUpload({
-    assetType: 'TRACK_AUDIO',
-    trackId:   trackId ?? undefined,
+    assetType: "TRACK_AUDIO",
+    trackId: trackId ?? undefined,
     onDone: () => {
-      // If cover was also selected, kick off that upload now
       if (coverFile && trackId) coverUpload.upload(coverFile);
       else setDone(true);
     },
   });
 
-  const coverUpload = useFileUpload({
-    assetType: 'TRACK_COVER',
-    trackId:   trackId ?? undefined,
-    onDone:    () => setDone(true),
-  });
-
-  // RHF
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreateTrackFormValues>({
     resolver: zodResolver(createTrackSchema),
-    defaultValues: { title: '', isExplicit: false, genreIds: [] },
+    defaultValues: { title: "", isExplicit: false, genreIds: [] },
   });
 
+  const busy =
+    isSubmitting ||
+    createTrack.isPending ||
+    audioUpload.state.phase !== "idle" ||
+    coverUpload.state.phase !== "idle";
+
   const onSubmit = async (values: CreateTrackFormValues) => {
-    if (!artist) { toastError('No artist profile', 'Create an artist profile first.'); return; }
-    if (!audioFile) { toastError('Audio required', 'Please select an audio file.'); return; }
-
-    // Step 1 — create track metadata record → get trackId
-    const track = await createTrack.mutateAsync({ ...values });
+    if (!artist) {
+      error("No artist profile", "Create one in your profile first.");
+      return;
+    }
+    if (!audioFile) {
+      error("Audio required", "Select an audio file.");
+      return;
+    }
+    const track = await createTrack.mutateAsync(values);
     setTrackId(track.id);
-
-    // Step 2 — upload audio (cover upload chained in onDone above)
     await audioUpload.upload(audioFile);
   };
 
-  const handleAudioFile = useCallback((files: File[]) => setAudioFile(files[0]), []);
-  const handleCoverFile = useCallback((files: File[]) => setCoverFile(files[0]), []);
-
-  const handleValidationError = useCallback(
-    (err: { message: string }) => toastError('Invalid file', err.message),
-    [toastError],
+  const onAudioErr = useCallback(
+    (e: { message: string }) => error("Invalid file", e.message),
+    [error]
   );
+  const onCoverErr = useCallback(
+    (e: { message: string }) => error("Invalid file", e.message),
+    [error]
+  );
+  const onAudioFile = useCallback((f: File[]) => setAudioFile(f[0]), []);
+  const onCoverFile = useCallback((f: File[]) => setCoverFile(f[0]), []);
 
-  const isUploading =
-    audioUpload.state.phase !== 'idle' ||
-    coverUpload.state.phase !== 'idle';
-
-  if (artistLoading) {
-    return <div className="h-32 rounded-xl bg-secondary skeleton" />;
-  }
-
-  if (!artist) {
+  /* ── No artist profile ── */
+  if (user && user.role === "LISTENER") {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-8 text-center">
-        <Music2 className="h-10 w-10 text-muted-foreground/30" aria-hidden />
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-10 text-center">
+        <Music2 className="h-10 w-10 text-muted-foreground/30" />
         <div>
-          <p className="font-semibold text-foreground">No artist profile</p>
+          <p className="font-semibold">Artist profile required</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            You need an artist profile before you can upload tracks.
+            Create an artist profile to upload tracks.
           </p>
         </div>
-        <Link href={ROUTES.PROFILE} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
-          Create artist profile
+        <Link
+          href={ROUTES.PROFILE}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+        >
+          Go to profile
         </Link>
       </div>
     );
   }
 
+  /* ── Done ── */
   if (done) {
     return (
-      <div className="flex flex-col items-center gap-5 rounded-xl border border-emerald-800/40 bg-emerald-950/20 p-10 text-center">
-        <CheckCircle2 className="h-14 w-14 text-emerald-500" aria-hidden />
+      <div className="flex flex-col items-center gap-5 rounded-xl border border-emerald-800/30 bg-emerald-950/20 p-10 text-center">
+        <CheckCircle2 className="h-14 w-14 text-emerald-500" />
         <div>
-          <p className="text-lg font-bold text-foreground">Track uploaded!</p>
+          <p className="text-lg font-bold">Track uploaded!</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your audio is being processed. It will appear as Published once ready.
+            Your audio is being processed. It will go live shortly.
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="secondary" size="md" onClick={() => {
-            setAudioFile(null); setCoverFile(null); setTrackId(null); setDone(false);
-            audioUpload.reset(); coverUpload.reset();
-          }}>
+          <button
+            type="button"
+            onClick={() => {
+              setAudioFile(null);
+              setCoverFile(null);
+              setTrackId(null);
+              setDone(false);
+              audioUpload.reset();
+              coverUpload.reset();
+            }}
+            className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
+          >
             Upload another
-          </Button>
-          <Link href={ROUTES.ARTIST(artist.id)}
-            className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
-            View artist page <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-          </Link>
+          </button>
+          {artist && (
+            <Link
+              href={ROUTES.ARTIST(artist.id)}
+              className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+            >
+              View artist page <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+          )}
         </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-8">
-
+    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
       {/* ── Step 1: Metadata ── */}
       <section className="rounded-xl border border-border bg-card p-6 space-y-5">
         <div className="flex items-center gap-3">
-          <StepBadge n={1} done={!!trackId} active={!trackId} />
+          <Step n={1} done={!!trackId} active={!trackId} />
           <h2 className="text-sm font-semibold">Track details</h2>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-5">
-          {/* Title */}
-          <FormField label="Title" required className="sm:col-span-2">
-            <FormInput
-              type="text"
-              placeholder="Track title"
-              error={!!errors.title}
-              disabled={isUploading}
-              {...register('title')}
-            />
-            <FormError message={errors.title?.message} />
-          </FormField>
+        {/* Title */}
+        <div>
+          <label className="block text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1.5">
+            Title <span className="text-destructive">*</span>
+          </label>
+          <input
+            {...register("title")}
+            type="text"
+            placeholder="Track title"
+            disabled={busy}
+            className={cn(
+              "w-full rounded-md bg-secondary border px-3 py-2.5 text-sm text-foreground",
+              "placeholder:text-muted-foreground/50 outline-none transition-colors",
+              "focus:border-primary/50 focus:ring-2 focus:ring-ring/20",
+              errors.title ? "border-destructive" : "border-border",
+              busy && "opacity-50 cursor-not-allowed"
+            )}
+          />
+          {errors.title && (
+            <p className="mt-1 text-xs text-destructive">
+              {errors.title.message}
+            </p>
+          )}
+        </div>
 
-          {/* Genre */}
-          <FormField label="Genre" className="sm:col-span-2">
-            <div className="flex flex-wrap gap-2 mt-1">
-              {genresData?.map((g) => (
-                <label key={g.id} className="inline-flex items-center gap-1.5 cursor-pointer">
+        {/* Genres */}
+        {!!genres?.length && (
+          <div>
+            <label className="block text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
+              Genres{" "}
+              <span className="text-muted-foreground/50 text-[10px] normal-case">
+                (up to 5)
+              </span>
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {genres.map((g) => (
+                <label key={g.id} className="cursor-pointer">
                   <input
                     type="checkbox"
                     value={g.id}
-                    disabled={isUploading}
-                    {...register('genreIds')}
+                    disabled={busy}
+                    {...register("genreIds")}
                     className="sr-only peer"
                   />
-                  <span className={cn(
-                    'rounded-full border px-3 py-1 text-xs font-medium transition-colors cursor-pointer',
-                    'border-border text-muted-foreground bg-secondary',
-                    'peer-checked:border-primary peer-checked:bg-primary/15 peer-checked:text-primary',
-                    'hover:border-primary/60 hover:text-foreground',
-                    isUploading && 'opacity-50 cursor-not-allowed',
-                  )}>
+                  <span
+                    className={cn(
+                      "inline-block rounded-full border px-3 py-1 text-xs font-medium transition-all cursor-pointer",
+                      "border-border text-muted-foreground bg-secondary",
+                      "peer-checked:border-primary peer-checked:bg-primary/15 peer-checked:text-primary",
+                      "hover:border-primary/60 hover:text-foreground",
+                      busy && "opacity-50 pointer-events-none"
+                    )}
+                  >
                     {g.name}
                   </span>
                 </label>
               ))}
             </div>
-          </FormField>
+          </div>
+        )}
 
-          {/* Explicit */}
-          <label className="flex items-center gap-3 cursor-pointer select-none">
-            <div className="relative">
-              <input type="checkbox" disabled={isUploading} {...register('isExplicit')} className="sr-only peer" />
-              <div className="h-5 w-9 rounded-full bg-secondary border border-border peer-checked:bg-primary transition-colors" />
-              <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">Explicit content</p>
-              <p className="text-xs text-muted-foreground">Mark if the track contains explicit lyrics</p>
-            </div>
-          </label>
-        </div>
+        {/* Explicit */}
+        <label className="flex items-center gap-3 cursor-pointer select-none">
+          <div className="relative">
+            <input
+              type="checkbox"
+              disabled={busy}
+              {...register("isExplicit")}
+              className="sr-only peer"
+            />
+            <div className="h-5 w-9 rounded-full bg-secondary border border-border peer-checked:bg-primary transition-colors" />
+            <div className="absolute left-0.5 top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform peer-checked:translate-x-4" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Explicit content</p>
+            <p className="text-xs text-muted-foreground">
+              Contains mature or explicit lyrics
+            </p>
+          </div>
+        </label>
       </section>
 
       {/* ── Step 2: Audio ── */}
-      <section className="rounded-xl border border-border bg-card p-6 space-y-5">
+      <section className="rounded-xl border border-border bg-card p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <StepBadge n={2} done={audioUpload.state.phase === 'done' || audioUpload.state.phase === 'processing'} active={!!audioFile} />
-          <h2 className="text-sm font-semibold">Audio file <span className="text-destructive ml-0.5">*</span></h2>
+          <Step
+            n={2}
+            done={["done", "processing"].includes(audioUpload.state.phase)}
+            active={!!audioFile}
+          />
+          <h2 className="text-sm font-semibold">
+            Audio file <span className="text-destructive ml-0.5">*</span>
+          </h2>
         </div>
 
         {audioFile ? (
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="flex items-center gap-3 rounded-md border border-border bg-secondary/50 px-4 py-3">
-              <Music2 className="h-5 w-5 shrink-0 text-primary" aria-hidden />
+              <Music2 className="h-5 w-5 shrink-0 text-primary" />
               <div className="flex-1 min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">{audioFile.name}</p>
+                <p className="truncate text-sm font-medium">{audioFile.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {(audioFile.size / 1024 / 1024).toFixed(2)} MB · {audioFile.type}
+                  {(audioFile.size / 1024 / 1024).toFixed(2)} MB ·{" "}
+                  {audioFile.type}
                 </p>
               </div>
-              {audioUpload.state.phase === 'idle' && (
-                <button type="button" onClick={() => setAudioFile(null)}
-                  className="text-xs text-muted-foreground hover:text-destructive transition-colors shrink-0">
+              {audioUpload.state.phase === "idle" && (
+                <button
+                  type="button"
+                  onClick={() => setAudioFile(null)}
+                  className="text-xs text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                >
                   Remove
                 </button>
               )}
@@ -249,29 +314,34 @@ export function UploadTrackForm() {
           <DropZone
             accept={ACCEPTED_AUDIO_TYPES}
             maxSizeBytes={MAX_AUDIO_SIZE_BYTES}
-            onFiles={handleAudioFile}
-            onError={handleValidationError}
+            onFiles={onAudioFile}
+            onError={onAudioErr}
             type="audio"
             label="Drop audio file here"
             hint="MP3, WAV, FLAC, AAC · Max 100 MB"
-            disabled={isUploading}
+            disabled={busy}
             className="min-h-[140px]"
           />
         )}
       </section>
 
       {/* ── Step 3: Cover ── */}
-      <section className="rounded-xl border border-border bg-card p-6 space-y-5">
+      <section className="rounded-xl border border-border bg-card p-6 space-y-4">
         <div className="flex items-center gap-3">
-          <StepBadge n={3} done={coverUpload.state.phase === 'done'} active={!!coverFile} />
+          <Step
+            n={3}
+            done={coverUpload.state.phase === "done"}
+            active={!!coverFile}
+          />
           <h2 className="text-sm font-semibold">
             Cover art
-            <span className="ml-2 text-xs font-normal text-muted-foreground">(optional)</span>
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              (optional)
+            </span>
           </h2>
         </div>
 
         <div className="flex gap-4">
-          {/* Preview square */}
           <div className="h-28 w-28 shrink-0">
             {coverFile ? (
               <ImagePreview
@@ -283,18 +353,16 @@ export function UploadTrackForm() {
               <EmptyCover className="h-full w-full" />
             )}
           </div>
-
-          {/* Drop zone */}
           <div className="flex-1 min-w-0 space-y-3">
             <DropZone
               accept={ACCEPTED_IMAGE_TYPES}
               maxSizeBytes={MAX_IMAGE_SIZE_BYTES}
-              onFiles={handleCoverFile}
-              onError={handleValidationError}
+              onFiles={onCoverFile}
+              onError={onCoverErr}
               type="image"
-              label={coverFile ? 'Replace cover art' : 'Drop image here'}
+              label={coverFile ? "Replace cover" : "Drop image here"}
               hint="JPEG, PNG, WebP · Max 5 MB · Square recommended"
-              disabled={isUploading}
+              disabled={busy}
               className="min-h-[100px]"
             />
             <UploadProgressBar state={coverUpload.state} />
@@ -305,17 +373,29 @@ export function UploadTrackForm() {
       {/* ── Submit ── */}
       <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-6 py-4">
         <p className="text-xs text-muted-foreground">
-          Uploading as <span className="font-semibold text-foreground">{artist.stageName}</span>
+          Uploading as{" "}
+          <span className="font-semibold text-foreground">
+            {artist?.stageName ?? "…"}
+          </span>
         </p>
-        <Button
+        <button
           type="submit"
-          variant="primary"
-          size="lg"
-          loading={isSubmitting || createTrack.isPending || isUploading}
-          disabled={isSubmitting || createTrack.isPending || isUploading || !audioFile}
+          disabled={busy || !audioFile}
+          className={cn(
+            "flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold transition-all",
+            "bg-primary text-primary-foreground hover:opacity-90",
+            "disabled:opacity-40 disabled:cursor-not-allowed"
+          )}
         >
-          {isUploading ? 'Uploading…' : 'Upload track'}
-        </Button>
+          {busy ? (
+            <>
+              <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              {audioUpload.state.phase !== "idle" ? "Uploading…" : "Creating…"}
+            </>
+          ) : (
+            "Upload track"
+          )}
+        </button>
       </div>
     </form>
   );
