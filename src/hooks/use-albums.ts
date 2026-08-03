@@ -42,9 +42,9 @@ export function useCreateAlbum(artistId: string) {
     mutationFn: (dto: CreateAlbumDto) => albumsService.create(artistId, dto),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['albums'] });
-      success('Album created');
+      success('آلبوم ایجاد شد');
     },
-    onError: (err) => error('Failed to create album', extractApiError(err)),
+    onError: (err) => error('ایجاد آلبوم ناموفق بود', extractApiError(err)),
   });
 }
 
@@ -57,9 +57,9 @@ export function useUpdateAlbum(id: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.albums.detail(id) });
       qc.invalidateQueries({ queryKey: ['albums'] });
-      success('Album updated');
+      success('آلبوم ویرایش شد');
     },
-    onError: (err) => error('Failed to update album', extractApiError(err)),
+    onError: (err) => error('ویرایش آلبوم ناموفق بود', extractApiError(err)),
   });
 }
 
@@ -71,8 +71,8 @@ export function useDeleteAlbum() {
     mutationFn: (id: string) => albumsService.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['albums'] });
-      success('Album deleted');
+      success('آلبوم حذف شد');
     },
-    onError: (err) => error('Failed to delete album', extractApiError(err)),
+    onError: (err) => error('حذف آلبوم ناموفق بود', extractApiError(err)),
   });
 }

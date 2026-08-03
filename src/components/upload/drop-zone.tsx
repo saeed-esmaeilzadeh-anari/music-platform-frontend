@@ -1,7 +1,7 @@
 "use client";
 
 import { UploadCloud, FileAudio, ImageIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/index";
 import { useDropZone, type DropZoneError } from "@/hooks/use-drop-zone";
 
 interface DropZoneProps {

@@ -9,7 +9,7 @@ import { useArtistProfile } from '@/hooks/use-artist-profile';
 import { UploadTrackForm } from '@/components/upload/upload-track-form';
 import { UploadAlbumForm } from '@/components/upload/upload-album-form';
 import { UploadCoverForm } from '@/components/upload/upload-cover-form';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { ROUTES } from '@/lib/constants';
 
 // ─── Tab definition ───────────────────────────────────────────────────────────

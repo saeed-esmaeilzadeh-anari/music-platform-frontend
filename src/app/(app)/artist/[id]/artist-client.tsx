@@ -10,7 +10,7 @@ import { AlbumCard } from '@/components/album/album-card';
 import { SectionHeader } from '@/components/shared/section-header';
 import { DetailHeroSkeleton, CardSkeleton, TrackRowSkeleton } from '@/components/shared/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
-import { formatCount } from '@/lib/utils';
+import { formatCount } from '@/lib/utils/index';
 import { Music2 } from 'lucide-react';
 
 export function ArtistClient({ id }: { id: string }) {

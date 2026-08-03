@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Play } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils/index';
 import { CoverImage } from '@/components/shared/cover-image';
 import { ROUTES } from '@/lib/constants';
 import type { AlbumResponse } from '@/types';

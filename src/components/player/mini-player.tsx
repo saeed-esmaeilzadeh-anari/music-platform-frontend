@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Play, Pause, SkipForward, ChevronDown } from 'lucide-react';
-import { cn, formatDuration } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils/index';
 import { usePlayerStore } from '@/stores/player.store';
 
 /**

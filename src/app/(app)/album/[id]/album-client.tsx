@@ -11,7 +11,7 @@ import { LikeButton } from '@/components/shared/like-button';
 import { DetailHeroSkeleton, TrackRowSkeleton } from '@/components/shared/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ROUTES } from '@/lib/constants';
-import { formatDate, formatDuration } from '@/lib/utils';
+import { formatDate, formatDuration } from '@/lib/utils/index';
 import { Music2, Disc3 } from 'lucide-react';
 
 export function AlbumClient({ id }: { id: string }) {

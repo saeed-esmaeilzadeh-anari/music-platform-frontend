@@ -1,5 +1,5 @@
 import { QueryClient } from "@tanstack/react-query";
-import { isApiError } from "@/lib/utils";
+import { isApiError } from "@/lib/utils/index";
 
 /**
  * Factory — called once per app mount inside QueryProvider.

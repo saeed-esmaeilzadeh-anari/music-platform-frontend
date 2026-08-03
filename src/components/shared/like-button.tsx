@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Heart } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { useLike, useUnlike } from '@/hooks/use-catalog';
 import type { LikeTargetType } from '@/types';
 

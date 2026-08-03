@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play, Pause, Pencil, Trash2, UserPlus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/index";
 import { usePlayerStore } from "@/stores/player.store";
 import { useDeletePlaylist } from "@/hooks/use-playlists";
 import { LikeButton } from "@/components/shared/like-button";

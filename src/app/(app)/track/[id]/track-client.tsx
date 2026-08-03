@@ -12,7 +12,7 @@ import { AddToPlaylistModal } from '@/components/shared/add-to-playlist-modal';
 import { DetailHeroSkeleton } from '@/components/shared/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ROUTES } from '@/lib/constants';
-import { formatDuration, formatCount, formatRelativeTime, extractApiError } from '@/lib/utils';
+import { formatDuration, formatCount, formatRelativeTime, extractApiError } from '@/lib/utils/index';
 import { Music2, MessageCircle, Send } from 'lucide-react';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';

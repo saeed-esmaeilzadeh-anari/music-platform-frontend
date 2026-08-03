@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Search, X, Plus, Check, Loader2 } from 'lucide-react';
-import { cn, formatDuration } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils/index';
 import { useAddTrackToPlaylist } from '@/hooks/use-playlists';
 import { useTracks } from '@/hooks/use-tracks';
 import { CoverImage } from '@/components/shared/cover-image';

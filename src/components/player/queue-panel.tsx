@@ -6,7 +6,7 @@ import {
   X, GripVertical, Trash2, ListMusic,
   History, Play, Pause, ChevronRight,
 } from 'lucide-react';
-import { cn, formatDuration } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils/index';
 import { usePlayerStore } from '@/stores/player.store';
 import { useUIStore } from '@/stores/ui.store';
 import { ROUTES } from '@/lib/constants';

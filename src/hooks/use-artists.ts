@@ -1,16 +1,12 @@
-"use client";
+'use client';
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { artistsService } from "@/services/artists.service";
-import { queryKeys } from "@/lib/constants/query-keys";
-import { STALE_TIME } from "@/lib/constants";
-import { useToast } from "@/providers/toast-provider";
-import { extractApiError } from "@/lib/utils";
-import type {
-  CreateArtistDto,
-  PaginationQuery,
-  UpdateArtistDto,
-} from "@/types";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { artistsService } from '@/services/artists.service';
+import { queryKeys } from '@/lib/constants/query-keys';
+import { STALE_TIME } from '@/lib/constants';
+import { useToast } from '@/providers/toast-provider';
+import { extractApiError } from '@/lib/utils';
+import type { CreateArtistDto, PaginationQuery, UpdateArtistDto } from '@/types';
 
 export function useArtists(query?: PaginationQuery) {
   return useQuery({
@@ -36,11 +32,11 @@ export function useCreateArtistProfile() {
   return useMutation({
     mutationFn: (dto: CreateArtistDto) => artistsService.create(dto),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["artists"] });
+      qc.invalidateQueries({ queryKey: ['artists'] });
       qc.invalidateQueries({ queryKey: queryKeys.users.me() });
-      success("Artist profile created!");
+      success('پروفایل هنرمند ایجاد شد');
     },
-    onError: (err) => error("Failed to create profile", extractApiError(err)),
+    onError: (err) => error('ایجاد پروفایل ناموفق بود', extractApiError(err)),
   });
 }
 
@@ -52,8 +48,8 @@ export function useUpdateArtist(id: string) {
     mutationFn: (dto: UpdateArtistDto) => artistsService.update(id, dto),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.artists.detail(id) });
-      success("Profile updated");
+      success('پروفایل ویرایش شد');
     },
-    onError: (err) => error("Failed to update profile", extractApiError(err)),
+    onError: (err) => error('ویرایش پروفایل ناموفق بود', extractApiError(err)),
   });
 }

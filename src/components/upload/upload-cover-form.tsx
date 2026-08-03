@@ -21,7 +21,7 @@ import {
   ACCEPTED_IMAGE_TYPES,
   MAX_IMAGE_SIZE_BYTES,
 } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import type { UploadAssetType } from '@/types';
 
 // ─── Schema ───────────────────────────────────────────────────────────────────

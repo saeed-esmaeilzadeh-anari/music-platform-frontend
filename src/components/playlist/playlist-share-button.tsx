@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Link2, Check, Globe, Lock, EyeOff } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { useUpdatePlaylist } from '@/hooks/use-playlists';
 import type { PlaylistResponse, PlaylistVisibility } from '@/types';
 

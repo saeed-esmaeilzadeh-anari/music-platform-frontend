@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Play, Pause, MoreHorizontal, ListPlus, Heart } from 'lucide-react';
-import { cn, formatDuration, formatCount } from '@/lib/utils';
+import { cn, formatDuration, formatCount } from '@/lib/utils/index';
 import { usePlayTrack } from '@/hooks/use-player';
 import { useAddFavorite } from '@/hooks/use-catalog';
 import { CoverImage } from '@/components/shared/cover-image';

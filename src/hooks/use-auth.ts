@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { useToast } from '@/providers/toast-provider';
-import { extractApiError } from '@/lib/utils';
+import { extractApiError } from '@/lib/utils/index';
 import { queryKeys } from '@/lib/constants/query-keys';
 import { ROUTES } from '@/lib/constants';
 import { getRefreshToken } from '@/lib/api/http-client';

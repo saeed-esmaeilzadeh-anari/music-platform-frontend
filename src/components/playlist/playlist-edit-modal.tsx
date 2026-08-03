@@ -8,7 +8,7 @@ import { updatePlaylistSchema, type UpdatePlaylistFormValues } from '@/lib/valid
 import { useUpdatePlaylist } from '@/hooks/use-playlists';
 import { Button } from '@/components/ui/button';
 import { FormField, FormInput, FormError } from '@/components/ui/form-field';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import type { PlaylistResponse, PlaylistVisibility } from '@/types';
 
 interface PlaylistEditModalProps {

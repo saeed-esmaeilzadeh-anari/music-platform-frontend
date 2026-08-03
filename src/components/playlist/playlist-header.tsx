@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Globe, Lock, EyeOff, Pencil } from 'lucide-react';
-import { cn, formatDuration } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils/index';
 import { useUpdatePlaylist } from '@/hooks/use-playlists';
 import { CoverImage } from '@/components/shared/cover-image';
 import type { PlaylistResponse, PlaylistVisibility } from '@/types';

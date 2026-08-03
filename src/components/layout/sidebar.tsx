@@ -6,7 +6,7 @@ import {
   Home, Search, Library, Heart, History,
   Upload, LayoutDashboard, ChevronLeft, ChevronRight, Plus,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { ROUTES } from '@/lib/constants';
 import { useUIStore } from '@/stores/ui.store';
 import { useAuthStore } from '@/stores/auth.store';

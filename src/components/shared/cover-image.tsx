@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Music2, Disc3, User, ListMusic } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/index";
 
 type CoverType = "track" | "album" | "artist" | "playlist";
 

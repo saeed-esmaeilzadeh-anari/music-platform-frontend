@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { X, Home, Search, Library, Heart, History, Upload, LayoutDashboard } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { ROUTES } from '@/lib/constants';
 import { useUIStore } from '@/stores/ui.store';
 import { useAuthStore } from '@/stores/auth.store';

@@ -10,7 +10,7 @@ import {
   useCancelSubscription,
   usePaymentHistory,
 } from '@/hooks/use-user-data';
-import { cn, formatDate, formatCents } from '@/lib/utils';
+import { cn, formatDate, formatCents } from '@/lib/utils/index';
 import { PLAN_LABELS } from '@/lib/constants';
 import type { SubscriptionPlanInput } from '@/types';
 

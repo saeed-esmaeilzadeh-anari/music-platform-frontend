@@ -12,7 +12,7 @@ import { ArtistCard } from '@/components/artist/artist-card';
 import { PlaylistCard } from '@/components/playlist/playlist-card';
 import { CardSkeleton, ArtistCardSkeleton, TrackRowSkeleton } from '@/components/shared/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { ROUTES } from '@/lib/constants';
 import Link from 'next/link';
 import type { SearchEntityType, TrackResponse } from '@/types';

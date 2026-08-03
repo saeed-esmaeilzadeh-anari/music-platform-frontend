@@ -7,7 +7,7 @@ import { Mail, User, UserCircle } from "lucide-react";
 
 import { registerSchema, type RegisterFormValues } from "@/lib/validators";
 import { useRegister } from "@/hooks/use-auth";
-import { extractApiError } from "@/lib/utils";
+import { extractApiError } from "@/lib/utils/index";
 
 import { FormField, FormInput, FormError } from "@/components/ui/form-field";
 import { PasswordInput } from "@/components/ui/password-input";

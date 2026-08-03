@@ -7,7 +7,7 @@ import { Camera, LogOut, Shield, Calendar } from 'lucide-react';
 import { useMe, useUpdateMe, useListeningHistory } from '@/hooks/use-user-data';
 import { useLogoutAll } from '@/hooks/use-auth';
 import { updateProfileSchema, type UpdateProfileFormValues } from '@/lib/validators';
-import { getInitials, formatDate, formatRelativeTime, cn } from '@/lib/utils';
+import { getInitials, formatDate, formatRelativeTime, cn } from '@/lib/utils/index';
 import { ROUTES, ROLE_LABELS } from '@/lib/constants';
 import { TrackRow } from '@/components/track/track-card';
 import { TrackRowSkeleton } from '@/components/shared/skeleton';

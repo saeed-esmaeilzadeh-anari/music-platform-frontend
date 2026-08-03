@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 import { loginSchema, type LoginFormValues } from '@/lib/validators';
 import { useLogin } from '@/hooks/use-auth';
-import { extractApiError } from '@/lib/utils';
+import { extractApiError } from '@/lib/utils/index';
 import { ROUTES } from '@/lib/constants';
 
 import { FormField, FormInput, FormError } from '@/components/ui/form-field';

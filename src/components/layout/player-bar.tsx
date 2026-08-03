@@ -8,7 +8,7 @@ import {
   Volume1, Volume2, VolumeX,
   ListMusic, Heart,
 } from 'lucide-react';
-import { cn, formatDuration } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils/index';
 import { usePlayerStore } from '@/stores/player.store';
 import { useUIStore } from '@/stores/ui.store';
 import { useAddFavorite } from '@/hooks/use-catalog';

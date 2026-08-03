@@ -41,11 +41,28 @@ export function useUpdateUserStatus() {
   return useMutation({
     mutationFn: ({ id, dto }: { id: string; dto: UpdateUserStatusDto }) =>
       adminService.updateUserStatus(id, dto),
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ["users"] });
+      success(
+        variables.dto.status === "SUSPENDED"
+          ? "کاربر تعلیق شد"
+          : "کاربر فعال شد"
+      );
+    },
+    onError: (err) => error("عملیات ناموفق بود", extractApiError(err)),
+  });
+}
+
+export function useDeleteUser() {
+  const qc = useQueryClient();
+  const { success, error } = useToast();
+  return useMutation({
+    mutationFn: (id: string) => usersService.deleteById(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["users"] });
-      success("User status updated");
+      success("کاربر حذف شد");
     },
-    onError: (err) => error("Failed", extractApiError(err)),
+    onError: (err) => error("حذف کاربر ناموفق بود", extractApiError(err)),
   });
 }
 
@@ -58,9 +75,9 @@ export function useCreateGenre() {
     mutationFn: (dto: CreateGenreDto) => genresService.create(dto),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.genres.all() });
-      success("Genre created");
+      success("ژانر ایجاد شد");
     },
-    onError: (err) => error("Failed to create genre", extractApiError(err)),
+    onError: (err) => error("ایجاد ژانر ناموفق بود", extractApiError(err)),
   });
 }
 
@@ -72,9 +89,9 @@ export function useUpdateGenre() {
       genresService.update(id, dto),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.genres.all() });
-      success("Genre updated");
+      success("ژانر ویرایش شد");
     },
-    onError: (err) => error("Failed to update genre", extractApiError(err)),
+    onError: (err) => error("ویرایش ژانر ناموفق بود", extractApiError(err)),
   });
 }
 
@@ -85,8 +102,8 @@ export function useDeleteGenre() {
     mutationFn: (id: string) => genresService.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.genres.all() });
-      success("Genre deleted");
+      success("ژانر حذف شد");
     },
-    onError: (err) => error("Failed to delete genre", extractApiError(err)),
+    onError: (err) => error("حذف ژانر ناموفق بود", extractApiError(err)),
   });
 }

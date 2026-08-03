@@ -6,7 +6,7 @@ import {
   Play, Pause, Trash2, MoreHorizontal,
   ChevronUp, ChevronDown, ListPlus, Heart,
 } from 'lucide-react';
-import { cn, formatDuration, formatRelativeTime } from '@/lib/utils';
+import { cn, formatDuration, formatRelativeTime } from '@/lib/utils/index';
 import { usePlayTrack } from '@/hooks/use-player';
 import { useAddFavorite } from '@/hooks/use-catalog';
 import { useRemoveTrackFromPlaylist, useReorderPlaylistTrack } from '@/hooks/use-playlists';

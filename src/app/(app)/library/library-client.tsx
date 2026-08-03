@@ -8,7 +8,7 @@ import { PlaylistCard } from '@/components/playlist/playlist-card';
 import { TrackRow } from '@/components/track/track-card';
 import { CardSkeleton, TrackRowSkeleton } from '@/components/shared/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { ListMusic, Heart } from 'lucide-react';
 import type { TrackResponse } from '@/types';
 

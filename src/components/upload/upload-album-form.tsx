@@ -24,7 +24,7 @@ import {
   MAX_IMAGE_SIZE_BYTES,
   ROUTES,
 } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 
 const ALBUM_TYPE_OPTIONS = [
   { value: 'ALBUM',       label: 'Album' },

@@ -5,7 +5,7 @@ import { tracksService } from '@/services/tracks.service';
 import { queryKeys } from '@/lib/constants/query-keys';
 import { STALE_TIME } from '@/lib/constants';
 import { useToast } from '@/providers/toast-provider';
-import { extractApiError } from '@/lib/utils';
+import { extractApiError } from '@/lib/utils/index';
 import type { CreateTrackDto, TrackQuery, UpdateTrackDto } from '@/types';
 
 // ─── Queries ──────────────────────────────────────────────────────────────────

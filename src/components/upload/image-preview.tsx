@@ -1,7 +1,7 @@
 'use client';
 
 import { X, ImageIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 
 interface ImagePreviewProps {
   file: File;

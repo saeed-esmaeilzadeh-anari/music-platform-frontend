@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { formatCount } from '@/lib/utils';
+import { formatCount } from '@/lib/utils/index';
 import { CoverImage } from '@/components/shared/cover-image';
 import { ROUTES } from '@/lib/constants';
 import type { ArtistResponse } from '@/types';

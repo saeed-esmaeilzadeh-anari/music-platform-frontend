@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { Play, Lock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import { CoverImage } from '@/components/shared/cover-image';
 import { ROUTES } from '@/lib/constants';
 import type { PlaylistResponse } from '@/types';

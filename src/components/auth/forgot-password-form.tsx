@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 import { forgotPasswordSchema, type ForgotPasswordFormValues } from '@/lib/validators';
 import { ROUTES } from '@/lib/constants';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 
 import { FormField, FormInput, FormError } from '@/components/ui/form-field';
 import { Button } from '@/components/ui/button';

@@ -1,7 +1,7 @@
 'use client';
 
 import { CheckCircle2, XCircle, Loader2, UploadCloud } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
 import type { UploadState } from '@/hooks/use-file-upload';
 
 const LABELS: Record<string, string> = {

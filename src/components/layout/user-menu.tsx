@@ -13,8 +13,8 @@ import {
   ShieldCheck,
   Upload,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { getInitials, formatCount } from '@/lib/utils';
+import { cn } from '@/lib/utils/index';
+import { getInitials, formatCount } from '@/lib/utils/index';
 import { ROUTES, ROLE_LABELS } from '@/lib/constants';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/hooks/use-auth';
