@@ -1,11 +1,9 @@
 "use client";
-
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Music2, CheckCircle2, ExternalLink } from "lucide-react";
 import Link from "next/link";
-
 import {
   createTrackSchema,
   type CreateTrackFormValues,
@@ -26,7 +24,7 @@ import {
   MAX_IMAGE_SIZE_BYTES,
   ROUTES,
 } from "@/lib/constants";
-import { cn } from "@/lib/utils/index";
+import { cn } from "@/lib/utils";
 
 function Step({
   n,
@@ -53,14 +51,45 @@ function Step({
   );
 }
 
+function Field({
+  label,
+  required,
+  error,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  error?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1.5">
+        {label}
+        {required && <span className="text-destructive ml-0.5">*</span>}
+      </label>
+      {children}
+      {error && <p className="mt-1 text-xs text-destructive">{error}</p>}
+    </div>
+  );
+}
+
+const inputCls = (err?: boolean, disabled?: boolean) =>
+  cn(
+    "w-full rounded-md bg-secondary border px-3 py-2.5 text-sm text-foreground",
+    "placeholder:text-muted-foreground/50 outline-none transition-colors",
+    "focus:border-primary/50 focus:ring-2 focus:ring-ring/20",
+    err ? "border-destructive" : "border-border",
+    disabled && "opacity-50 cursor-not-allowed"
+  );
+
 export function UploadTrackForm() {
   const { user } = useAuthStore();
   const { data: artists } = useArtists({ limit: 100 });
   const { data: genres } = useGenres();
-  const { error } = useToast();
+  const { error: toast } = useToast();
 
   const artist = artists?.items.find((a) => a.userId === user?.id) ?? null;
-
   const createTrack = useCreateTrack(artist?.id ?? "");
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -73,7 +102,6 @@ export function UploadTrackForm() {
     trackId: trackId ?? undefined,
     onDone: () => setDone(true),
   });
-
   const audioUpload = useFileUpload({
     assetType: "TRACK_AUDIO",
     trackId: trackId ?? undefined,
@@ -100,11 +128,11 @@ export function UploadTrackForm() {
 
   const onSubmit = async (values: CreateTrackFormValues) => {
     if (!artist) {
-      error("No artist profile", "Create one in your profile first.");
+      toast("No artist profile", "Create one in your profile first.");
       return;
     }
     if (!audioFile) {
-      error("Audio required", "Select an audio file.");
+      toast("Audio required", "Select an audio file.");
       return;
     }
     const track = await createTrack.mutateAsync(values);
@@ -113,18 +141,17 @@ export function UploadTrackForm() {
   };
 
   const onAudioErr = useCallback(
-    (e: { message: string }) => error("Invalid file", e.message),
-    [error]
+    (e: { message: string }) => toast("Invalid file", e.message),
+    [toast]
   );
   const onCoverErr = useCallback(
-    (e: { message: string }) => error("Invalid file", e.message),
-    [error]
+    (e: { message: string }) => toast("Invalid file", e.message),
+    [toast]
   );
   const onAudioFile = useCallback((f: File[]) => setAudioFile(f[0]), []);
   const onCoverFile = useCallback((f: File[]) => setCoverFile(f[0]), []);
 
-  /* ── No artist profile ── */
-  if (user && user.role === "LISTENER") {
+  if (user?.role === "LISTENER") {
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-10 text-center">
         <Music2 className="h-10 w-10 text-muted-foreground/30" />
@@ -144,7 +171,6 @@ export function UploadTrackForm() {
     );
   }
 
-  /* ── Done ── */
   if (done) {
     return (
       <div className="flex flex-col items-center gap-5 rounded-xl border border-emerald-800/30 bg-emerald-950/20 p-10 text-center">
@@ -152,7 +178,7 @@ export function UploadTrackForm() {
         <div>
           <p className="text-lg font-bold">Track uploaded!</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Your audio is being processed. It will go live shortly.
+            Your audio is being processed and will go live shortly.
           </p>
         </div>
         <div className="flex gap-3">
@@ -166,7 +192,7 @@ export function UploadTrackForm() {
               audioUpload.reset();
               coverUpload.reset();
             }}
-            className="rounded-md border border-border px-4 py-2 text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
+            className="rounded-md border border-border px-4 py-2 text-sm font-semibold hover:bg-secondary transition-colors"
           >
             Upload another
           </button>
@@ -185,48 +211,24 @@ export function UploadTrackForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
-      {/* ── Step 1: Metadata ── */}
+      {/* Step 1: Metadata */}
       <section className="rounded-xl border border-border bg-card p-6 space-y-5">
         <div className="flex items-center gap-3">
           <Step n={1} done={!!trackId} active={!trackId} />
           <h2 className="text-sm font-semibold">Track details</h2>
         </div>
-
-        {/* Title */}
-        <div>
-          <label className="block text-xs font-medium uppercase tracking-widest text-muted-foreground mb-1.5">
-            Title <span className="text-destructive">*</span>
-          </label>
+        <Field label="Title" required error={errors.title?.message}>
           <input
             {...register("title")}
             type="text"
             placeholder="Track title"
             disabled={busy}
-            className={cn(
-              "w-full rounded-md bg-secondary border px-3 py-2.5 text-sm text-foreground",
-              "placeholder:text-muted-foreground/50 outline-none transition-colors",
-              "focus:border-primary/50 focus:ring-2 focus:ring-ring/20",
-              errors.title ? "border-destructive" : "border-border",
-              busy && "opacity-50 cursor-not-allowed"
-            )}
+            className={inputCls(!!errors.title, busy)}
           />
-          {errors.title && (
-            <p className="mt-1 text-xs text-destructive">
-              {errors.title.message}
-            </p>
-          )}
-        </div>
-
-        {/* Genres */}
+        </Field>
         {!!genres?.length && (
-          <div>
-            <label className="block text-xs font-medium uppercase tracking-widest text-muted-foreground mb-2">
-              Genres{" "}
-              <span className="text-muted-foreground/50 text-[10px] normal-case">
-                (up to 5)
-              </span>
-            </label>
-            <div className="flex flex-wrap gap-2">
+          <Field label="Genres">
+            <div className="flex flex-wrap gap-2 mt-1">
               {genres.map((g) => (
                 <label key={g.id} className="cursor-pointer">
                   <input
@@ -250,10 +252,8 @@ export function UploadTrackForm() {
                 </label>
               ))}
             </div>
-          </div>
+          </Field>
         )}
-
-        {/* Explicit */}
         <label className="flex items-center gap-3 cursor-pointer select-none">
           <div className="relative">
             <input
@@ -274,7 +274,7 @@ export function UploadTrackForm() {
         </label>
       </section>
 
-      {/* ── Step 2: Audio ── */}
+      {/* Step 2: Audio */}
       <section className="rounded-xl border border-border bg-card p-6 space-y-4">
         <div className="flex items-center gap-3">
           <Step
@@ -286,7 +286,6 @@ export function UploadTrackForm() {
             Audio file <span className="text-destructive ml-0.5">*</span>
           </h2>
         </div>
-
         {audioFile ? (
           <div className="space-y-3">
             <div className="flex items-center gap-3 rounded-md border border-border bg-secondary/50 px-4 py-3">
@@ -325,7 +324,7 @@ export function UploadTrackForm() {
         )}
       </section>
 
-      {/* ── Step 3: Cover ── */}
+      {/* Step 3: Cover */}
       <section className="rounded-xl border border-border bg-card p-6 space-y-4">
         <div className="flex items-center gap-3">
           <Step
@@ -334,13 +333,12 @@ export function UploadTrackForm() {
             active={!!coverFile}
           />
           <h2 className="text-sm font-semibold">
-            Cover art
-            <span className="ml-2 text-xs font-normal text-muted-foreground">
+            Cover art{" "}
+            <span className="ml-1 text-xs font-normal text-muted-foreground">
               (optional)
             </span>
           </h2>
         </div>
-
         <div className="flex gap-4">
           <div className="h-28 w-28 shrink-0">
             {coverFile ? (
@@ -370,7 +368,7 @@ export function UploadTrackForm() {
         </div>
       </section>
 
-      {/* ── Submit ── */}
+      {/* Submit */}
       <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-6 py-4">
         <p className="text-xs text-muted-foreground">
           Uploading as{" "}
@@ -381,11 +379,7 @@ export function UploadTrackForm() {
         <button
           type="submit"
           disabled={busy || !audioFile}
-          className={cn(
-            "flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold transition-all",
-            "bg-primary text-primary-foreground hover:opacity-90",
-            "disabled:opacity-40 disabled:cursor-not-allowed"
-          )}
+          className="flex items-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
         >
           {busy ? (
             <>
