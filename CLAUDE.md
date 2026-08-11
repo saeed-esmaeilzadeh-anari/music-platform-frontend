@@ -1,6 +1,8 @@
 @AGENTS.md
 
+-------------------------------------------------------------------------------------
 14050422 Jul 12, 2026, 7:53 AM --------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
 
 Login Page 
 Register Page
@@ -9,7 +11,10 @@ Register Page
 Protected Route
  Admin Route
 
+
+-------------------------------------------------------------------------------------
 14050424 --------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
 
 Created 2 files
 
@@ -64,8 +69,10 @@ page.tsx
 Create SearchClient with debounced query, tabs, and results across all entity types
 search-client.tsx
 
-14050424 _ changes --------------------------------------------------------------------------------
 
+-------------------------------------------------------------------------------------
+14050424 _ changes --------------------------------------------------------------------------------
+-------------------------------------------------------------------------------------
 Created 6 files
 
 Create Profile page
@@ -155,7 +162,9 @@ Output
 search page updated with Suspense
 Done
 
+-------------------------------------------------------------------------------------
 14050427
+-------------------------------------------------------------------------------------
 
 Implement a production-ready Spotify-like Music Player.
 Requirements:
@@ -222,7 +231,9 @@ Full production PlayerBar with SeekBar, VolumeControl (3 icons), NowPlayingInfo 
 Full production PlayerBar with SeekBar, VolumeControl (3 icons), NowPlayingInfo with loading, TransportControls, mobile strip — all wired to store
 Done
 
+-------------------------------------------------------------------------------------
 14050427_1
+-------------------------------------------------------------------------------------
 
 Now the Queue Panel, Recently Played, Mini Player, and full keyboard shortcut hook:
 Created 3 files
@@ -231,7 +242,9 @@ Create QueuePanel — slides in from right, shows current queue with drag-to-reo
 Create MiniPlayer — compact floating player for when user scrolls away from main player on mobile
 Create FullscreenPlayer — expanded mobile player with waveform visualization, all controlsDone
 
+-------------------------------------------------------------------------------------
 14050428
+-------------------------------------------------------------------------------------
 
 Now wire everything together — the keyboard shortcut toast display, the `(app)` layout with QueuePanel, MiniPlayer, and FullscreenPlayer, then the keyboard hints component:
 
@@ -285,7 +298,9 @@ PlaylistTrackRow — full production row with usePlayTrack, reorder up/down, rem
 
 PlaylistHeader — hero section with cover, metadata, inline-editable title for owners
 
+-------------------------------------------------------------------------------------
 14050511
+-------------------------------------------------------------------------------------
 
 Now I build every file clean, reading from what I know exists on disk:
 
@@ -314,3 +329,57 @@ Write ImagePreview and EmptyCover components
 Now all three forms:
 
 Write UploadTrackForm
+
+-------------------------------------------------------------------------------------
+14050520 create playlist components
+-------------------------------------------------------------------------------------
+
+Here's a precise breakdown of what was built and how every optimistic update works.
+
+File map — 14 files
+src/
+├── hooks/
+│   ├── use-playlists.ts              ← All 6 mutations with full optimistic updates
+│   └── use-playlist-cover.ts         ← Wraps useFileUpload → invalidates on done
+│
+├── components/playlist/
+│   ├── playlist-create-modal.tsx     ← RHF + Zod, optimistic list prepend
+│   ├── playlist-edit-modal.tsx       ← RHF + Zod, optimistic detail + list update, isDirty guard
+│   ├── playlist-cover-upload.tsx     ← Click/drag cover upload, progress bar, owner-only
+│   ├── playlist-share-button.tsx     ← Clipboard copy + visibility toggle dropdown
+│   ├── playlist-add-tracks-modal.tsx ← Debounced search, real tracksService, per-row add state
+│   ├── playlist-track-row.tsx        ← Play, reorder (↑↓), like, remove, add-to-other, context menu
+│   ├── playlist-header.tsx           ← Inline-editable title, cover upload, visibility badge, stats
+│   └── playlist-actions-bar.tsx      ← Play/pause, share, add tracks, edit, delete with confirmation
+│
+└── app/(app)/
+    ├── playlist/[id]/
+    │   ├── page.tsx                  ← Server wrapper
+    │   └── playlist-client.tsx       ← Composes all 6 components, track list, skeletons, empty state
+    └── library/
+        ├── page.tsx                  ← Server wrapper
+        └── library-client.tsx        ← Playlist grid, create button, per-card edit/delete menu
+
+
+Optimistic update strategy per mutation
+
+Mutation	                Optimistic action	                                           Rollback on error
+Create	                  Prepends temp playlist to list immediately	                 Restores previous list
+Rename / Edit           	Updates title/desc/visibility in detail + list	             Restores both caches
+Delete	                  Removes from list immediately	                               Restores previous list
+Remove track	            Removes from playlist.tracks[] immediately	                 Restores previous detail
+Reorder track	            Splices track to new position in playlist.tracks[]	         Restores previous detail
+Add track	                No optimistic (server assigns position)	                     Toast on error
+
+API endpoints consumed — all existing NestJS routes
+
+GET  /playlists               → useMyPlaylists
+GET  /playlists/:id           → usePlaylist (returns nested tracks[])
+POST /playlists               → useCreatePlaylist
+PATCH /playlists/:id          → useUpdatePlaylist (title, description, visibility)
+DELETE /playlists/:id         → useDeletePlaylist
+POST /playlists/:id/tracks    → useAddTrackToPlaylist
+DELETE /playlists/:id/tracks/:trackId → useRemoveTrackFromPlaylist
+PATCH /playlists/:id/tracks/:trackId  → useReorderPlaylistTrack
+POST /uploads/presign + PUT S3 + POST /uploads/confirm → usePlaylistCover
+GET  /tracks?search=&status=PUBLISHED → PlaylistAddTracksModal (debounced)

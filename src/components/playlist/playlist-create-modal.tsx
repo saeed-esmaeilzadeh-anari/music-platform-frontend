@@ -1,19 +1,19 @@
 'use client';
 
-import { useEffect, useId } from 'react';
+import { useId } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X, Pencil } from 'lucide-react';
-import { updatePlaylistSchema, type UpdatePlaylistFormValues } from '@/lib/validators';
-import { useUpdatePlaylist } from '@/hooks/use-playlists';
+import { X, ListMusic } from 'lucide-react';
+import { createPlaylistSchema, type CreatePlaylistFormValues } from '@/lib/validators';
+import { useCreatePlaylist } from '@/hooks/use-playlists';
 import { Button } from '@/components/ui/button';
 import { FormField, FormInput, FormError } from '@/components/ui/form-field';
 import { cn } from '@/lib/utils';
-import type { PlaylistResponse, PlaylistVisibility } from '@/types';
+import type { PlaylistVisibility } from '@/types';
 
-interface PlaylistEditModalProps {
-  playlist: PlaylistResponse;
+interface PlaylistCreateModalProps {
   onClose: () => void;
+  onCreated?: (id: string) => void;
 }
 
 const VISIBILITY_OPTIONS: { value: PlaylistVisibility; label: string; hint: string }[] = [
@@ -22,42 +22,40 @@ const VISIBILITY_OPTIONS: { value: PlaylistVisibility; label: string; hint: stri
   { value: 'PUBLIC',   label: 'Public',   hint: 'Everyone' },
 ];
 
-export function PlaylistEditModal({ playlist, onClose }: PlaylistEditModalProps) {
+export function PlaylistCreateModal({ onClose, onCreated }: PlaylistCreateModalProps) {
   const titleId = useId();
   const descId  = useId();
-  const update  = useUpdatePlaylist(playlist.id);
+  const create  = useCreatePlaylist();
 
-  const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting, isDirty } } =
-    useForm<UpdatePlaylistFormValues>({
-      resolver: zodResolver(updatePlaylistSchema),
-      defaultValues: { title: playlist.title, description: playlist.description ?? '', visibility: playlist.visibility },
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } =
+    useForm<CreatePlaylistFormValues>({
+      resolver: zodResolver(createPlaylistSchema),
+      defaultValues: { title: '', description: '', visibility: 'PRIVATE' },
     });
-
-  useEffect(() => {
-    reset({ title: playlist.title, description: playlist.description ?? '', visibility: playlist.visibility });
-  }, [playlist, reset]);
 
   const visibility = watch('visibility');
 
-  const onSubmit = async (values: UpdatePlaylistFormValues) => {
-    await update.mutateAsync({
+  const onSubmit = async (values: CreatePlaylistFormValues) => {
+    const result = await create.mutateAsync({
       title:       values.title,
       description: values.description || undefined,
       visibility:  values.visibility,
     });
+    onCreated?.(result.id);
     onClose();
   };
 
   return (
     <>
       <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={onClose} aria-hidden />
-      <div role="dialog" aria-label="Edit playlist" aria-modal="true"
-        className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card shadow-2xl">
+      <div role="dialog" aria-label="Create playlist" aria-modal="true"
+        className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card shadow-2xl animate-in fade-in-0 zoom-in-95">
 
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
           <div className="flex items-center gap-2.5">
-            <Pencil className="h-4 w-4 text-primary" aria-hidden />
-            <h2 className="text-sm font-semibold">Edit playlist</h2>
+            <ListMusic className="h-4 w-4 text-primary" aria-hidden />
+            <h2 className="text-sm font-semibold">New playlist</h2>
           </div>
           <button type="button" onClick={onClose} aria-label="Close"
             className="text-muted-foreground hover:text-foreground transition-colors">
@@ -66,12 +64,14 @@ export function PlaylistEditModal({ playlist, onClose }: PlaylistEditModalProps)
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-5 space-y-5">
+          {/* Title */}
           <FormField label="Title" required>
-            <FormInput id={titleId} type="text" placeholder="Playlist title"
-              error={!!errors.title} {...register('title')} />
+            <FormInput id={titleId} type="text" placeholder="My playlist"
+              error={!!errors.title} autoFocus {...register('title')} />
             <FormError message={errors.title?.message} />
           </FormField>
 
+          {/* Description */}
           <div className="space-y-1.5">
             <label htmlFor={descId}
               className="block text-xs font-medium uppercase tracking-widest text-muted-foreground">
@@ -80,10 +80,14 @@ export function PlaylistEditModal({ playlist, onClose }: PlaylistEditModalProps)
             <textarea id={descId} rows={3} placeholder="Optional description…"
               {...register('description')}
               className="w-full resize-none rounded-md bg-secondary border border-border px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none focus:border-primary/50 focus:ring-2 focus:ring-ring/20 transition-colors" />
+            <FormError message={errors.description?.message} />
           </div>
 
+          {/* Visibility */}
           <div className="space-y-2">
-            <span className="block text-xs font-medium uppercase tracking-widest text-muted-foreground">Visibility</span>
+            <span className="block text-xs font-medium uppercase tracking-widest text-muted-foreground">
+              Visibility
+            </span>
             <div className="grid grid-cols-3 gap-2">
               {VISIBILITY_OPTIONS.map((opt) => (
                 <button key={opt.value} type="button"
@@ -101,12 +105,13 @@ export function PlaylistEditModal({ playlist, onClose }: PlaylistEditModalProps)
             </div>
           </div>
 
+          {/* Actions */}
           <div className="flex justify-end gap-3 pt-1">
             <Button type="button" variant="ghost" size="md" onClick={onClose}>Cancel</Button>
             <Button type="submit" variant="primary" size="md"
-              loading={isSubmitting || update.isPending}
-              disabled={!isDirty || isSubmitting || update.isPending}>
-              Save changes
+              loading={isSubmitting || create.isPending}
+              disabled={isSubmitting || create.isPending}>
+              Create playlist
             </Button>
           </div>
         </form>

@@ -1,189 +1,212 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Clock, Music2, ListMusic } from 'lucide-react';
-
-import { usePlaylist } from '@/hooks/use-playlists';
+import { useRouter } from 'next/navigation';
+import { ListMusic, Music2, Clock } from 'lucide-react';
+import { usePlaylist, type PlaylistWithTracks } from '@/hooks/use-playlists';
 import { useAuthStore } from '@/stores/auth.store';
-
-import { PlaylistHeader }        from '@/components/playlist/playlist-header';
-import { PlaylistActionsBar }    from '@/components/playlist/playlist-actions-bar';
-import { PlaylistTrackRow }      from '@/components/playlist/playlist-track-row';
-import { PlaylistEditModal }     from '@/components/playlist/playlist-edit-modal';
-import { PlaylistAddTracksModal }from '@/components/playlist/playlist-add-tracks-modal';
-import { DetailHeroSkeleton, TrackRowSkeleton } from '@/components/shared/skeleton';
-import { EmptyState } from '@/components/shared/empty-state';
-import { Button } from '@/components/ui/button';
-
+import { PlaylistHeader }         from '@/components/playlist/playlist-header';
+import { PlaylistActionsBar }     from '@/components/playlist/playlist-actions-bar';
+import { PlaylistTrackRow }       from '@/components/playlist/playlist-track-row';
+import { PlaylistEditModal }      from '@/components/playlist/playlist-edit-modal';
+import { PlaylistAddTracksModal } from '@/components/playlist/playlist-add-tracks-modal';
+import { cn } from '@/lib/utils';
 import type { TrackResponse } from '@/types';
 
-interface PlaylistClientProps {
-  id: string;
-}
+// ── Skeletons ────────────────────────────────────────────────────────────────
 
-// ─── Column header ────────────────────────────────────────────────────────────
-
-function TrackListHeader({ showAddedDate }: { showAddedDate: boolean }) {
+function HeroSkeleton() {
   return (
-    <div className="flex items-center gap-3 px-3 pb-2 border-b border-border/50 text-[11px] font-medium uppercase tracking-widest text-muted-foreground/60 select-none">
-      {/* Index */}
-      <span className="w-8 text-right">#</span>
-      {/* Cover placeholder */}
-      <span className="w-9" />
-      {/* Title */}
-      <span className="flex-1">Title</span>
-      {/* Added date (hidden on mobile) */}
-      {showAddedDate && (
-        <span className="hidden lg:block w-24 text-right">Added</span>
-      )}
-      {/* Duration */}
-      <span className="w-10 text-right">
-        <Clock className="h-3 w-3 ml-auto" aria-label="Duration" />
-      </span>
-      {/* Actions gutter */}
-      <span className="w-[88px]" />
+    <div className="bg-gradient-to-b from-primary/10 to-background px-6 lg:px-8 py-8">
+      <div className="flex gap-6">
+        <div className="h-44 w-44 shrink-0 rounded-md bg-secondary animate-pulse" />
+        <div className="flex-1 space-y-3 pt-6">
+          <div className="h-3 w-24 rounded bg-secondary animate-pulse" />
+          <div className="h-8 w-56 rounded bg-secondary animate-pulse" />
+          <div className="h-4 w-32 rounded bg-secondary animate-pulse" />
+        </div>
+      </div>
     </div>
   );
 }
 
-// ─── PlaylistClient ───────────────────────────────────────────────────────────
+function RowSkeleton() {
+  return (
+    <div className="flex items-center gap-3 px-3 py-2.5">
+      <div className="h-4 w-4 shrink-0 rounded bg-secondary animate-pulse" />
+      <div className="h-9 w-9 shrink-0 rounded bg-secondary animate-pulse" />
+      <div className="flex-1 space-y-1.5">
+        <div className="h-3.5 w-40 rounded bg-secondary animate-pulse" />
+        <div className="h-3 w-24 rounded bg-secondary animate-pulse" />
+      </div>
+      <div className="h-3 w-10 shrink-0 rounded bg-secondary animate-pulse" />
+    </div>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+
+function EmptyState({ isOwner, onAdd }: { isOwner: boolean; onAdd: () => void }) {
+  return (
+    <div className="flex flex-col items-center gap-4 py-20 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary border border-border">
+        <Music2 className="h-7 w-7 text-muted-foreground/40" aria-hidden />
+      </div>
+      <div>
+        <p className="font-semibold text-foreground">No tracks yet</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {isOwner ? 'Add tracks to get this playlist started.' : 'This playlist has no tracks yet.'}
+        </p>
+      </div>
+      {isOwner && (
+        <button type="button" onClick={onAdd}
+          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
+          Add tracks
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ── PlaylistClient ────────────────────────────────────────────────────────────
+
+interface PlaylistClientProps { id: string }
 
 export function PlaylistClient({ id }: PlaylistClientProps) {
-  const { data: playlist, isLoading, error } = usePlaylist(id);
-  const { user }                             = useAuthStore();
+  const router                   = useRouter();
+  const { data, isLoading, error } = usePlaylist(id);
+  const playlist                 = data as PlaylistWithTracks | undefined;
+  const { user }                 = useAuthStore();
 
-  const [editModalOpen, setEditModalOpen]         = useState(false);
-  const [addTracksModalOpen, setAddTracksModalOpen] = useState(false);
+  const [editOpen,      setEditOpen]      = useState(false);
+  const [addTracksOpen, setAddTracksOpen] = useState(false);
 
-  // ── Derived state ──────────────────────────────────────────────────────────
+  // Derive tracks from nested PlaylistTrack join rows
+  const playlistTracks = useMemo(() => {
+    if (!playlist?.tracks) return [];
+    return playlist.tracks
+      .filter((pt): pt is { track: TrackResponse; addedAt: string; position: number } => !!pt?.track)
+      .sort((a, b) => a.position - b.position);
+  }, [playlist]);
 
-  const isOwner = !!user && !!playlist && user.id === playlist.ownerId;
+  const tracks         = useMemo(() => playlistTracks.map(pt => pt.track), [playlistTracks]);
+  const totalDuration  = useMemo(() => tracks.reduce((s, t) => s + t.durationSec, 0), [tracks]);
+  const existingIds    = useMemo(() => new Set(tracks.map(t => t.id)), [tracks]);
+  const isOwner        = !!user && !!playlist && user.id === playlist.ownerId;
 
-  /**
-   * The backend returns PlaylistTrack join rows (with .track) nested under
-   * the playlist when fetching GET /playlists/:id.
-   * We extract and type-assert them here — keeping this logic in one place.
-   */
-  const playlistTracks: Array<{ track: TrackResponse; addedAt: string }> =
-    useMemo(() => {
-      if (!playlist) return [];
-      const raw = (playlist as any).tracks ?? [];
-      return raw
-        .filter((pt: any) => !!pt?.track)
-        .map((pt: any) => ({ track: pt.track as TrackResponse, addedAt: pt.addedAt ?? '' }));
-    }, [playlist]);
+  // Simple play state (replace with your real player store when wiring up)
+  const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
+  const [isPlaying,      setIsPlaying]      = useState(false);
+  const isPlaylistPlaying = isPlaying && tracks.some(t => t.id === currentTrackId);
 
-  const tracks       = useMemo(() => playlistTracks.map((pt) => pt.track), [playlistTracks]);
-  const totalDuration = useMemo(() => tracks.reduce((s, t) => s + t.durationSec, 0), [tracks]);
-  const existingTrackIds = useMemo(() => new Set(tracks.map((t) => t.id)), [tracks]);
+  const handlePlayPause = () => {
+    if (!tracks.length) return;
+    if (isPlaylistPlaying) { setIsPlaying(false); return; }
+    setCurrentTrackId(tracks[0].id);
+    setIsPlaying(true);
+  };
 
-  // ── Loading / error states ─────────────────────────────────────────────────
+  const handleTrackPlay = (track: TrackResponse) => {
+    if (currentTrackId === track.id) { setIsPlaying(v => !v); return; }
+    setCurrentTrackId(track.id);
+    setIsPlaying(true);
+  };
 
-  if (isLoading) {
-    return (
-      <div>
-        <DetailHeroSkeleton />
-        <div className="px-6 lg:px-8 mt-4 space-y-1">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <TrackRowSkeleton key={i} />
-          ))}
-        </div>
+  // Loading
+  if (isLoading) return (
+    <div>
+      <HeroSkeleton />
+      <div className="px-3 lg:px-5 mt-4 space-y-1">
+        {Array.from({ length: 8 }).map((_, i) => <RowSkeleton key={i} />)}
       </div>
-    );
-  }
+    </div>
+  );
 
-  if (error || !playlist) {
-    return (
-      <EmptyState
-        icon={ListMusic}
-        title="Playlist not found"
-        description="This playlist may have been deleted or set to private."
-        className="min-h-[60vh]"
-      />
-    );
-  }
-
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // Not found / error
+  if (error || !playlist) return (
+    <div className="flex flex-col items-center gap-4 py-24 text-center px-4">
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary border border-border">
+        <ListMusic className="h-7 w-7 text-muted-foreground/40" />
+      </div>
+      <div>
+        <p className="font-semibold">Playlist not found</p>
+        <p className="mt-1 text-sm text-muted-foreground">This playlist may have been deleted or set to private.</p>
+      </div>
+    </div>
+  );
 
   return (
     <div className="pb-16">
-      {/* ── Hero / header ── */}
+
+      {/* Hero / header */}
       <PlaylistHeader
         playlist={playlist}
         trackCount={tracks.length}
         totalDurationSec={totalDuration}
         isOwner={isOwner}
-        onEditClick={() => setEditModalOpen(true)}
+        onEditClick={() => setEditOpen(true)}
       />
 
-      {/* ── Action bar ── */}
+      {/* Action bar */}
       <PlaylistActionsBar
         playlist={playlist}
         tracks={tracks}
         isOwner={isOwner}
-        onEditClick={() => setEditModalOpen(true)}
-        onAddTracksClick={() => setAddTracksModalOpen(true)}
+        isPlaylistPlaying={isPlaylistPlaying}
+        onPlayPause={handlePlayPause}
+        onEditClick={() => setEditOpen(true)}
+        onAddTracksClick={() => setAddTracksOpen(true)}
+        onDeleted={() => router.replace('/library')}
       />
 
-      {/* ── Track list ── */}
+      {/* Track list */}
       <div className="px-3 lg:px-5 mt-4">
         {tracks.length > 0 ? (
           <>
-            <TrackListHeader showAddedDate={playlistTracks.some((pt) => !!pt.addedAt)} />
+            {/* Column header */}
+            <div className="flex items-center gap-3 px-3 pb-2 border-b border-border/50 text-[11px] font-medium uppercase tracking-widest text-muted-foreground/60 select-none">
+              <span className="w-8 text-right">#</span>
+              <span className="w-9" />
+              <span className="flex-1">Title</span>
+              <span className="hidden lg:block w-24 text-right">Added</span>
+              <span className="w-10 text-right">
+                <Clock className="h-3 w-3 ml-auto" aria-label="Duration" />
+              </span>
+              <span className="w-16" />
+            </div>
 
             <div className="mt-1 space-y-0.5">
-              {playlistTracks.map(({ track, addedAt }, i) => (
+              {playlistTracks.map((pt, i) => (
                 <PlaylistTrackRow
-                  key={`${track.id}-${i}`}
-                  track={track}
+                  key={`${pt.track.id}-${i}`}
+                  track={pt.track}
                   index={i}
                   totalTracks={tracks.length}
-                  queue={tracks}
                   playlistId={id}
                   isOwner={isOwner}
-                  addedAt={addedAt}
+                  addedAt={pt.addedAt}
+                  isCurrent={currentTrackId === pt.track.id}
+                  isPlaying={isPlaying && currentTrackId === pt.track.id}
+                  onPlay={() => handleTrackPlay(pt.track)}
+                  onAddToOther={() => {}}
                 />
               ))}
             </div>
           </>
         ) : (
-          <EmptyState
-            icon={Music2}
-            title="No tracks yet"
-            description={
-              isOwner
-                ? 'Click "Add tracks" above to start building this playlist.'
-                : 'This playlist has no tracks yet.'
-            }
-            className="py-20"
-            action={
-              isOwner ? (
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => setAddTracksModalOpen(true)}
-                >
-                  Add tracks
-                </Button>
-              ) : undefined
-            }
-          />
+          <EmptyState isOwner={isOwner} onAdd={() => setAddTracksOpen(true)} />
         )}
       </div>
 
-      {/* ── Modals ── */}
-      {editModalOpen && (
-        <PlaylistEditModal
-          playlist={playlist}
-          onClose={() => setEditModalOpen(false)}
-        />
+      {/* Modals */}
+      {editOpen && (
+        <PlaylistEditModal playlist={playlist} onClose={() => setEditOpen(false)} />
       )}
-
-      {addTracksModalOpen && (
+      {addTracksOpen && (
         <PlaylistAddTracksModal
           playlistId={id}
-          existingTrackIds={existingTrackIds}
-          onClose={() => setAddTracksModalOpen(false)}
+          existingTrackIds={existingIds}
+          onClose={() => setAddTracksOpen(false)}
         />
       )}
     </div>

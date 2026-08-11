@@ -1,47 +1,40 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import {
-  Play, Pause, Trash2, MoreHorizontal,
-  ChevronUp, ChevronDown, ListPlus, Heart,
-} from 'lucide-react';
-import { cn, formatDuration, formatRelativeTime } from '@/lib/utils/index';
-import { usePlayTrack } from '@/hooks/use-player';
-import { useAddFavorite } from '@/hooks/use-catalog';
+import { MoreHorizontal, Trash2, ChevronUp, ChevronDown, Heart, ListPlus } from 'lucide-react';
 import { useRemoveTrackFromPlaylist, useReorderPlaylistTrack } from '@/hooks/use-playlists';
-import { CoverImage } from '@/components/shared/cover-image';
-import { AddToPlaylistModal } from '@/components/shared/add-to-playlist-modal';
-import { ROUTES } from '@/lib/constants';
+import { useToast } from '@/providers/toast-provider';
+import { cn, formatDuration, formatRelativeTime } from '@/lib/utils';
 import type { TrackResponse } from '@/types';
 
 interface PlaylistTrackRowProps {
   track: TrackResponse;
   index: number;
   totalTracks: number;
-  queue: TrackResponse[];
   playlistId: string;
   isOwner: boolean;
-  /** ISO string of when this track was added to the playlist */
   addedAt?: string;
+  isCurrent?: boolean;
+  isPlaying?: boolean;
+  onPlay: () => void;
+  onAddToOther?: () => void;
 }
 
 export function PlaylistTrackRow({
-  track,
-  index,
-  totalTracks,
-  queue,
-  playlistId,
-  isOwner,
-  addedAt,
+  track, index, totalTracks, playlistId, isOwner,
+  addedAt, isCurrent, isPlaying, onPlay, onAddToOther,
 }: PlaylistTrackRowProps) {
-  const { isCurrentTrack, isThisPlaying, handlePlay } = usePlayTrack(track, queue);
-  const addFav      = useAddFavorite();
   const removeTrack = useRemoveTrackFromPlaylist(playlistId);
   const reorder     = useReorderPlaylistTrack(playlistId);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const { error: toast } = useToast();
 
-  const [menuOpen, setMenuOpen]             = useState(false);
-  const [showAddToPlaylist, setShowAddToPlaylist] = useState(false);
+  const handleRemove = () => {
+    setMenuOpen(false);
+    removeTrack.mutate(track.id, {
+      onError: () => toast('Failed to remove', 'Please try again.'),
+    });
+  };
 
   const moveUp = () => {
     if (index === 0) return;
@@ -54,168 +47,117 @@ export function PlaylistTrackRow({
   };
 
   return (
-    <>
-      <div
-        className={cn(
-          'group flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors',
-          'hover:bg-secondary',
-          isCurrentTrack && 'bg-primary/5',
-        )}
-      >
-        {/* ── Index / Play button ── */}
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-          {isCurrentTrack ? (
-            <button
-              type="button"
-              onClick={handlePlay}
-              aria-label={isThisPlaying ? 'Pause' : 'Play'}
-              className="text-primary"
-            >
-              {isThisPlaying
-                ? <Pause className="h-4 w-4 fill-current" aria-hidden />
-                : <Play  className="h-4 w-4 fill-current translate-x-px" aria-hidden />}
+    <div className={cn(
+      'group flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors select-none',
+      'hover:bg-secondary',
+      isCurrent && 'bg-primary/5',
+    )}>
+      {/* Index / play */}
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center">
+        {isCurrent ? (
+          <button type="button" onClick={onPlay} aria-label={isPlaying ? 'Pause' : 'Play'}
+            className="text-primary">
+            {isPlaying
+              ? <span className="flex items-end gap-px h-4" aria-hidden>
+                  {[1.0,1.6,1.2].map((h,i) => (
+                    <span key={i} className="w-[3px] rounded-full bg-primary animate-pulse" style={{ height: `${h*10}px`, animationDelay: `${i*0.15}s` }} />
+                  ))}
+                </span>
+              : <span className="text-primary text-xs translate-x-px">▶</span>}
+          </button>
+        ) : (
+          <>
+            <span className="text-sm tabular-nums text-muted-foreground group-hover:hidden">{index + 1}</span>
+            <button type="button" onClick={onPlay} aria-label={`Play ${track.title}`}
+              className="hidden group-hover:flex text-foreground">
+              <span className="text-xs translate-x-px">▶</span>
             </button>
-          ) : (
+          </>
+        )}
+      </div>
+
+      {/* Cover */}
+      <div className="h-9 w-9 shrink-0 overflow-hidden rounded bg-secondary border border-border">
+        {track.coverUrl
+          ? <img src={track.coverUrl} alt="" className="h-full w-full object-cover" />
+          : <div className="h-full w-full bg-secondary" />}
+      </div>
+
+      {/* Title + artist */}
+      <div className="flex-1 min-w-0">
+        <p className={cn('truncate text-sm font-medium leading-tight', isCurrent && 'text-primary')}>
+          {track.title}
+        </p>
+        <p className="truncate text-xs text-muted-foreground mt-0.5">{track.artist.stageName}</p>
+      </div>
+
+      {/* Added date */}
+      {addedAt && (
+        <span className="hidden lg:block text-xs text-muted-foreground w-24 text-right shrink-0">
+          {formatRelativeTime(addedAt)}
+        </span>
+      )}
+
+      {/* Duration */}
+      <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
+        {formatDuration(track.durationSec)}
+      </span>
+
+      {/* Actions */}
+      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+        {/* Reorder (owner, desktop) */}
+        {isOwner && (
+          <div className="hidden md:flex flex-col">
+            <button type="button" onClick={moveUp} disabled={index === 0 || reorder.isPending}
+              aria-label="Move up" className="flex h-4 w-5 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
+              <ChevronUp className="h-3 w-3" />
+            </button>
+            <button type="button" onClick={moveDown} disabled={index >= totalTracks - 1 || reorder.isPending}
+              aria-label="Move down" className="flex h-4 w-5 items-center justify-center text-muted-foreground hover:text-foreground disabled:opacity-30 transition-colors">
+              <ChevronDown className="h-3 w-3" />
+            </button>
+          </div>
+        )}
+
+        {/* Context menu */}
+        <div className="relative">
+          <button type="button" onClick={() => setMenuOpen(v => !v)}
+            aria-label="More options" aria-expanded={menuOpen}
+            className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors">
+            <MoreHorizontal className="h-3.5 w-3.5" />
+          </button>
+
+          {menuOpen && (
             <>
-              <span className="text-sm tabular-nums text-muted-foreground group-hover:hidden select-none">
-                {index + 1}
-              </span>
-              <button
-                type="button"
-                onClick={handlePlay}
-                aria-label={`Play ${track.title}`}
-                className="hidden group-hover:flex text-foreground"
-              >
-                <Play className="h-4 w-4 fill-current translate-x-px" aria-hidden />
-              </button>
+              <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden />
+              <div className="absolute right-0 top-full mt-1 z-20 w-52 rounded-lg border border-border bg-card shadow-xl py-1">
+                {onAddToOther && (
+                  <button type="button" onClick={() => { onAddToOther(); setMenuOpen(false); }}
+                    className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
+                    <ListPlus className="h-4 w-4 shrink-0" />
+                    Add to another playlist
+                  </button>
+                )}
+                <button type="button" onClick={() => {}}
+                  className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors">
+                  <Heart className="h-4 w-4 shrink-0" />
+                  Like track
+                </button>
+                {isOwner && (
+                  <>
+                    <div className="my-1 border-t border-border" />
+                    <button type="button" onClick={handleRemove} disabled={removeTrack.isPending}
+                      className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50">
+                      <Trash2 className="h-4 w-4 shrink-0" />
+                      {removeTrack.isPending ? 'Removing…' : 'Remove from playlist'}
+                    </button>
+                  </>
+                )}
+              </div>
             </>
           )}
         </div>
-
-        {/* ── Cover ── */}
-        <div className="h-9 w-9 shrink-0 overflow-hidden rounded bg-secondary border border-border">
-          <CoverImage src={track.coverUrl} alt={track.title} type="track" size="xl" />
-        </div>
-
-        {/* ── Title + artist ── */}
-        <div className="flex-1 min-w-0">
-          <Link
-            href={ROUTES.TRACK(track.id)}
-            className={cn(
-              'block truncate text-sm font-medium leading-tight hover:underline',
-              isCurrentTrack ? 'text-primary' : 'text-foreground',
-            )}
-          >
-            {track.title}
-          </Link>
-          <Link
-            href={ROUTES.ARTIST(track.artist.id)}
-            className="block truncate text-xs text-muted-foreground hover:text-foreground hover:underline mt-0.5"
-          >
-            {track.artist.stageName}
-          </Link>
-        </div>
-
-        {/* ── Added date (desktop) ── */}
-        {addedAt && (
-          <span className="hidden lg:block text-xs text-muted-foreground tabular-nums shrink-0 w-24 text-right">
-            {formatRelativeTime(addedAt)}
-          </span>
-        )}
-
-        {/* ── Duration ── */}
-        <span className="text-xs text-muted-foreground tabular-nums w-10 text-right shrink-0">
-          {formatDuration(track.durationSec)}
-        </span>
-
-        {/* ── Actions (revealed on hover) ── */}
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-          {/* Like */}
-          <button
-            type="button"
-            onClick={() => addFav.mutate(track.id)}
-            aria-label="Like track"
-            className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-primary transition-colors"
-          >
-            <Heart className="h-3.5 w-3.5" aria-hidden />
-          </button>
-
-          {/* Reorder (owner only, desktop) */}
-          {isOwner && (
-            <div className="hidden md:flex flex-col">
-              <button
-                type="button"
-                onClick={moveUp}
-                disabled={index === 0 || reorder.isPending}
-                aria-label="Move up"
-                className="flex h-4 w-6 items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
-              >
-                <ChevronUp className="h-3 w-3" aria-hidden />
-              </button>
-              <button
-                type="button"
-                onClick={moveDown}
-                disabled={index >= totalTracks - 1 || reorder.isPending}
-                aria-label="Move down"
-                className="flex h-4 w-6 items-center justify-center text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
-              >
-                <ChevronDown className="h-3 w-3" aria-hidden />
-              </button>
-            </div>
-          )}
-
-          {/* Context menu */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((v) => !v)}
-              aria-label="More options"
-              aria-expanded={menuOpen}
-              className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <MoreHorizontal className="h-3.5 w-3.5" aria-hidden />
-            </button>
-
-            {menuOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden />
-                <div className="absolute right-0 top-full mt-1 z-20 w-48 rounded-lg border border-border bg-card shadow-xl py-1 animate-fade-in">
-                  <button
-                    type="button"
-                    onClick={() => { setShowAddToPlaylist(true); setMenuOpen(false); }}
-                    className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-foreground hover:bg-secondary transition-colors"
-                  >
-                    <ListPlus className="h-4 w-4 shrink-0" aria-hidden />
-                    Add to another playlist
-                  </button>
-
-                  {isOwner && (
-                    <>
-                      <div className="my-1 border-t border-border" />
-                      <button
-                        type="button"
-                        onClick={() => { removeTrack.mutate(track.id); setMenuOpen(false); }}
-                        disabled={removeTrack.isPending}
-                        className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
-                      >
-                        <Trash2 className="h-4 w-4 shrink-0" aria-hidden />
-                        Remove from playlist
-                      </button>
-                    </>
-                  )}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
       </div>
-
-      {showAddToPlaylist && (
-        <AddToPlaylistModal
-          trackId={track.id}
-          onClose={() => setShowAddToPlaylist(false)}
-        />
-      )}
-    </>
+    </div>
   );
 }
