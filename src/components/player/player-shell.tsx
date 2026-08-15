@@ -1,28 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { FullscreenPlayer } from './fullscreen-player';
-import { usePlayerStore } from '@/stores/player.store';
+import { MiniPlayer }              from './mini-player';
+import { KeyboardShortcutsHint }   from './keyboard-shortcuts-hint';
+import { QueuePanel }              from './queue-panel';
+import { useUIStore }              from '@/stores/ui.store';
 
 /**
  * PlayerShell
  *
- * Manages overlay player states that need client-side toggle logic:
- * - FullscreenPlayer (mobile expanded view)
+ * Rendered as a sibling to <main> inside the (app) layout flex row.
  *
- * QueuePanel, MiniPlayer, and KeyboardShortcutsHint are mounted directly
- * in (app)/layout.tsx since they need no shared toggle state with each other.
- *
- * This component provides a context for the cover-art tap → fullscreen
- * gesture on mobile. Import and mount inside (app)/layout.tsx if needed.
+ * - QueuePanel: renders inline when open → pushes <main> on desktop,
+ *   uses a fixed overlay backdrop on mobile (handled inside QueuePanel).
+ * - MiniPlayer: position:fixed — mobile only, appears when PlayerBar
+ *   scrolls offscreen (detected via IntersectionObserver on #player-bar-sentinel).
+ * - KeyboardShortcutsHint: position:fixed — desktop only floating button + modal.
  */
 export function PlayerShell() {
-  const [fullscreenOpen, setFullscreenOpen] = useState(false);
-  const { currentTrack } = usePlayerStore();
-
-  if (!currentTrack || !fullscreenOpen) return null;
+  const { queuePanelOpen, closeQueuePanel } = useUIStore();
 
   return (
-    <FullscreenPlayer onClose={() => setFullscreenOpen(false)} />
+    <>
+      {/* Inline queue panel — pushes content sideways on desktop */}
+      {queuePanelOpen && (
+        <QueuePanel onClose={closeQueuePanel} />
+      )}
+
+      {/* Fixed overlays */}
+      <MiniPlayer />
+      <KeyboardShortcutsHint />
+    </>
   );
 }

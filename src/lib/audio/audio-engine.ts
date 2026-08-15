@@ -1,33 +1,44 @@
 /**
- * AudioEngine — singleton that owns the HTMLAudioElement.
+ * AudioEngine — singleton HTMLAudioElement driver.
  *
- * Subscribes to usePlayerStore and drives real audio playback.
+ * Subscribes to usePlayerStore and drives a single <audio> element.
  * Writes currentTime / duration / loading state back to the store.
  *
- * Seek detection: we use a dedicated `_seekTarget` field on the store
- * snapshot. When `seekTo(sec)` is called, the store sets `progressSec`
- * to `sec`. The engine sees `|store.progressSec - audio.currentTime| > 1`
- * combined with the fact it wasn't a natural timeupdate tick → seeks.
- * We gate this with `isSeeking` to prevent the resulting `seeked` event
- * from triggering another seek.
+ * Seek detection: when store.progressSec differs from audio.currentTime
+ * by more than 1.5 s AND the gap wasn't caused by a natural timeupdate tick,
+ * we treat it as an intentional seekTo() call and set audio.currentTime.
+ * A `isSeeking` flag prevents the resulting `seeked` event from looping.
  */
 
 import { usePlayerStore } from '@/stores/player.store';
 
 class AudioEngine {
   private audio: HTMLAudioElement;
-  private unsubscribe: (() => void) | null = null;
+  private unsub:   (() => void) | null = null;
 
-  // Snapshot of last-acted values
-  private lastTrackId: string | null = null;
-  private lastIsPlaying = false;
-  private lastVolume = 0.8;
-  private lastIsMuted = false;
-  private lastRepeatMode = 'none';
+  // Snapshot values to avoid redundant DOM calls
+  private lastTrackId:    string | null = null;
+  private lastIsPlaying:  boolean       = false;
+  private lastVolume:     number        = 0.8;
+  private lastIsMuted:    boolean       = false;
+  private lastRepeat:     string        = 'none';
+  private lastAppliedSeek: number       = -1;
+  private isSeeking:      boolean       = false;
 
-  // Seek management
-  private isSeeking = false;
-  private lastAppliedSeek = -1;
+  // constructor() {
+  //   if (typeof window === 'undefined') return;
+  //   this.audio        = new Audio();
+  //   this.audio.preload = 'metadata';
+  //   this.bindEvents();
+  //   this.subscribeToStore();
+
+  //   // Apply persisted volume on boot
+  //   const s        = usePlayerStore.getState();
+  //   this.audio.volume = s.isMuted ? 0 : s.volume;
+  //   this.audio.muted  = s.isMuted;
+  //   this.lastVolume   = s.volume;
+  //   this.lastIsMuted  = s.isMuted;
+  // }
 
   constructor() {
     this.audio = typeof window !== 'undefined' ? new Audio() : ({} as HTMLAudioElement);
@@ -44,114 +55,95 @@ class AudioEngine {
     this.audio.muted = isMuted;
   }
 
-  // ── HTMLAudioElement event → store ────────────────────────────────────────
+  // ── DOM events → store ────────────────────────────────────────────────────
 
   private bindEvents() {
-    const getStore = () => usePlayerStore.getState();
+    const store = () => usePlayerStore.getState();
 
     this.audio.addEventListener('timeupdate', () => {
-      if (!this.isSeeking) {
-        getStore().setProgress(this.audio.currentTime);
-      }
+      if (!this.isSeeking) store().setProgress(this.audio.currentTime);
     });
-
     this.audio.addEventListener('durationchange', () => {
       const d = this.audio.duration;
-      if (d && isFinite(d)) getStore().setDuration(d);
+      if (d && isFinite(d)) store().setDuration(d);
     });
-
-    this.audio.addEventListener('waiting',  () => getStore().setIsLoading(true));
-    this.audio.addEventListener('canplay',  () => getStore().setIsLoading(false));
-    this.audio.addEventListener('playing',  () => getStore().setIsLoading(false));
+    this.audio.addEventListener('waiting',  () => store().setIsLoading(true));
+    this.audio.addEventListener('canplay',  () => store().setIsLoading(false));
+    this.audio.addEventListener('playing',  () => store().setIsLoading(false));
     this.audio.addEventListener('seeked',   () => { this.isSeeking = false; });
-
-    this.audio.addEventListener('ended', () => {
-      getStore().playNext();
-    });
-
-    this.audio.addEventListener('error', () => {
-      getStore().setIsLoading(false);
-    });
+    this.audio.addEventListener('ended',    () => store().playNext());
+    this.audio.addEventListener('error',    () => store().setIsLoading(false));
   }
 
-  // ── Store → HTMLAudioElement ──────────────────────────────────────────────
+  // ── Store → DOM ───────────────────────────────────────────────────────────
 
   private subscribeToStore() {
-    this.unsubscribe = usePlayerStore.subscribe((state) => {
-      // ── New track ──────────────────────────────────────────────────────────
+    this.unsub = usePlayerStore.subscribe((state) => {
+      // ── Track changed ────────────────────────────────────────────────────
       const trackId = state.currentTrack?.id ?? null;
       if (trackId !== this.lastTrackId) {
-        this.lastTrackId = trackId;
+        this.lastTrackId     = trackId;
         this.lastAppliedSeek = -1;
-        this.isSeeking = false;
+        this.isSeeking       = false;
 
         if (state.currentTrack?.audioUrl) {
           this.audio.src = state.currentTrack.audioUrl;
           this.audio.load();
           if (state.isPlaying) this.safePlay();
         } else {
-          // No audio URL (DRAFT/PROCESSING) — reset
           this.audio.removeAttribute('src');
           this.audio.load();
         }
-        return; // don't process other changes on same tick as track load
+        return; // skip remaining checks on same tick
       }
 
-      // ── Play / pause ───────────────────────────────────────────────────────
+      // ── Play / pause ─────────────────────────────────────────────────────
       if (state.isPlaying !== this.lastIsPlaying) {
         this.lastIsPlaying = state.isPlaying;
-        if (state.isPlaying) {
-          this.safePlay();
-        } else {
-          this.audio.pause();
-        }
+        if (state.isPlaying) this.safePlay();
+        else this.audio.pause();
       }
 
-      // ── Volume / mute ──────────────────────────────────────────────────────
+      // ── Volume / mute ────────────────────────────────────────────────────
       if (state.volume !== this.lastVolume || state.isMuted !== this.lastIsMuted) {
-        this.lastVolume = state.volume;
+        this.lastVolume  = state.volume;
         this.lastIsMuted = state.isMuted;
         this.audio.volume = state.isMuted ? 0 : Math.max(0, Math.min(1, state.volume));
-        this.audio.muted = state.isMuted;
+        this.audio.muted  = state.isMuted;
       }
 
-      // ── Seek: only when progressSec changed significantly from audio.currentTime ─
-      // This detects a seekTo() call vs a natural timeupdate.
+      // ── Seek (intent vs passive timeupdate) ──────────────────────────────
       if (
         !this.isSeeking &&
+        isFinite(state.progressSec) &&
         Math.abs(state.progressSec - this.audio.currentTime) > 1.5 &&
-        state.progressSec !== this.lastAppliedSeek &&
-        isFinite(state.progressSec)
+        state.progressSec !== this.lastAppliedSeek
       ) {
         this.lastAppliedSeek = state.progressSec;
-        this.isSeeking = true;
+        this.isSeeking       = true;
         this.audio.currentTime = state.progressSec;
       }
 
-      // ── Repeat one → loop attribute ────────────────────────────────────────
-      if (state.repeatMode !== this.lastRepeatMode) {
-        this.lastRepeatMode = state.repeatMode;
-        this.audio.loop = state.repeatMode === 'one';
+      // ── Repeat one → loop ────────────────────────────────────────────────
+      if (state.repeatMode !== this.lastRepeat) {
+        this.lastRepeat  = state.repeatMode;
+        this.audio.loop  = state.repeatMode === 'one';
       }
     });
   }
 
-  private async safePlay(): Promise<void> {
+  private async safePlay() {
     try {
       await this.audio.play();
     } catch (err) {
-      if ((err as DOMException)?.name === 'NotAllowedError') {
-        // Browser blocked autoplay — keep store in sync
-        usePlayerStore.getState().pause();
-      } else if ((err as DOMException)?.name !== 'AbortError') {
-        // AbortError is expected when src changes mid-play; ignore it
-        console.warn('[AudioEngine] play() error:', err);
-      }
+      const name = (err as DOMException)?.name;
+      if (name === 'NotAllowedError') usePlayerStore.getState().pause();
+      // AbortError is expected when src changes mid-play — ignore
     }
   }
 
   destroy() {
-    this.unsubscribe?.();
+    this.unsub?.();
     this.audio.pause();
     this.audio.src = '';
   }
@@ -160,13 +152,9 @@ class AudioEngine {
 let engine: AudioEngine | null = null;
 
 export function initAudioEngine(): AudioEngine {
-  if (typeof window === 'undefined') {
-    throw new Error('AudioEngine must be created in a browser context');
-  }
+  if (typeof window === 'undefined') throw new Error('Browser only');
   if (!engine) engine = new AudioEngine();
   return engine;
 }
 
-export function getAudioEngine(): AudioEngine | null {
-  return engine;
-}
+export function getAudioEngine() { return engine; }

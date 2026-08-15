@@ -3,121 +3,69 @@
 import { usePlayerStore } from '@/stores/player.store';
 import type { TrackResponse } from '@/types';
 
-/**
- * usePlayer
- *
- * Thin selector-based hook. Import individual pieces to avoid
- * re-rendering components when unrelated player state changes.
- *
- * @example
- * const { currentTrack, isPlaying, togglePlay } = usePlayer();
- * const { progressSec, durationSec, seekTo } = usePlayerProgress();
- * const { volume, isMuted, setVolume, toggleMute } = usePlayerVolume();
- */
+/** Full store — re-renders on any state change. Use sparingly. */
+export function usePlayer() { return usePlayerStore(); }
 
-// Full player state — use sparingly (any state change triggers re-render)
-export function usePlayer() {
-  return usePlayerStore();
-}
+// ── Granular selectors — only re-render when the selected slice changes ───────
 
-// Playback identity
-export function useCurrentTrack(): TrackResponse | null {
-  return usePlayerStore((s) => s.currentTrack);
-}
+export const useCurrentTrack  = () => usePlayerStore(s => s.currentTrack);
+export const useIsPlaying     = () => usePlayerStore(s => s.isPlaying);
+export const useIsLoading     = () => usePlayerStore(s => s.isLoading);
+export const useRepeatMode    = () => usePlayerStore(s => s.repeatMode);
+export const useIsShuffled    = () => usePlayerStore(s => s.isShuffled);
+export const useQueue         = () => usePlayerStore(s => s.queue);
+export const useQueueIndex    = () => usePlayerStore(s => s.queueIndex);
+export const useRecentlyPlayed= () => usePlayerStore(s => s.recentlyPlayed);
 
-export function useIsPlaying(): boolean {
-  return usePlayerStore((s) => s.isPlaying);
-}
-
-export function useIsLoading(): boolean {
-  return usePlayerStore((s) => s.isLoading);
-}
-
-export function useIsCurrentTrack(trackId: string): boolean {
-  return usePlayerStore((s) => s.currentTrack?.id === trackId);
-}
-
-export function useIsCurrentAndPlaying(trackId: string): boolean {
-  return usePlayerStore((s) => s.currentTrack?.id === trackId && s.isPlaying);
-}
-
-// Progress (updates every 500ms — keep selectors cheap)
 export function usePlayerProgress() {
-  const progressSec = usePlayerStore((s) => s.progressSec);
-  const durationSec = usePlayerStore((s) => s.durationSec);
-  const seekTo      = usePlayerStore((s) => s.seekTo);
-  const percent     = durationSec > 0 ? (progressSec / durationSec) * 100 : 0;
+  const progressSec = usePlayerStore(s => s.progressSec);
+  const durationSec = usePlayerStore(s => s.durationSec);
+  const seekTo      = usePlayerStore(s => s.seekTo);
+  const pct         = durationSec > 0 ? (progressSec / durationSec) * 100 : 0;
   const remaining   = Math.max(0, durationSec - progressSec);
-  return { progressSec, durationSec, seekTo, percent, remaining };
+  return { progressSec, durationSec, seekTo, pct, remaining };
 }
 
-// Volume (rarely changes)
 export function usePlayerVolume() {
-  const volume     = usePlayerStore((s) => s.volume);
-  const isMuted    = usePlayerStore((s) => s.isMuted);
-  const setVolume  = usePlayerStore((s) => s.setVolume);
-  const toggleMute = usePlayerStore((s) => s.toggleMute);
-  return { volume, isMuted, setVolume, toggleMute, effectiveVolume: isMuted ? 0 : volume };
+  const volume      = usePlayerStore(s => s.volume);
+  const isMuted     = usePlayerStore(s => s.isMuted);
+  const setVolume   = usePlayerStore(s => s.setVolume);
+  const toggleMute  = usePlayerStore(s => s.toggleMute);
+  const effective   = isMuted ? 0 : volume;
+  return { volume, isMuted, setVolume, toggleMute, effective };
 }
 
-// Queue
-export function useQueue() {
-  const queue           = usePlayerStore((s) => s.queue);
-  const queueIndex      = usePlayerStore((s) => s.queueIndex);
-  const addToQueue      = usePlayerStore((s) => s.addToQueue);
-  const removeFromQueue = usePlayerStore((s) => s.removeFromQueue);
-  const clearQueue      = usePlayerStore((s) => s.clearQueue);
-  const moveQueueItem   = usePlayerStore((s) => s.moveQueueItem);
-  return { queue, queueIndex, addToQueue, removeFromQueue, clearQueue, moveQueueItem };
-}
-
-// Recently played
-export function useRecentlyPlayed() {
-  const recentlyPlayed      = usePlayerStore((s) => s.recentlyPlayed);
-  const clearRecentlyPlayed = usePlayerStore((s) => s.clearRecentlyPlayed);
-  return { recentlyPlayed, clearRecentlyPlayed };
-}
-
-// Transport actions (stable references — never triggers re-renders)
 export function usePlayerTransport() {
-  const togglePlay    = usePlayerStore((s) => s.togglePlay);
-  const play          = usePlayerStore((s) => s.play);
-  const pause         = usePlayerStore((s) => s.pause);
-  const resume        = usePlayerStore((s) => s.resume);
-  const playNext      = usePlayerStore((s) => s.playNext);
-  const playPrevious  = usePlayerStore((s) => s.playPrevious);
-  const repeatMode    = usePlayerStore((s) => s.repeatMode);
-  const isShuffled    = usePlayerStore((s) => s.isShuffled);
-  const cycleRepeat   = usePlayerStore((s) => s.cycleRepeat);
-  const toggleShuffle = usePlayerStore((s) => s.toggleShuffle);
   return {
-    togglePlay, play, pause, resume,
-    playNext, playPrevious,
-    repeatMode, isShuffled, cycleRepeat, toggleShuffle,
+    togglePlay:    usePlayerStore(s => s.togglePlay),
+    play:          usePlayerStore(s => s.play),
+    pause:         usePlayerStore(s => s.pause),
+    resume:        usePlayerStore(s => s.resume),
+    playNext:      usePlayerStore(s => s.playNext),
+    playPrevious:  usePlayerStore(s => s.playPrevious),
+    cycleRepeat:   usePlayerStore(s => s.cycleRepeat),
+    toggleShuffle: usePlayerStore(s => s.toggleShuffle),
   };
 }
 
 /**
- * usePlayTrack — convenience hook for track cards and rows.
- * Returns a stable `handlePlay` function and derived booleans.
+ * usePlayTrack — per-card / per-row play hook.
+ * Returns a stable `handlePlay` and derived booleans.
  */
 export function usePlayTrack(track: TrackResponse, queue?: TrackResponse[]) {
-  const currentTrack = usePlayerStore((s) => s.currentTrack);
-  const isPlaying    = usePlayerStore((s) => s.isPlaying);
-  const play         = usePlayerStore((s) => s.play);
-  const pause        = usePlayerStore((s) => s.pause);
-  const resume       = usePlayerStore((s) => s.resume);
+  const currentTrack = usePlayerStore(s => s.currentTrack);
+  const isPlaying    = usePlayerStore(s => s.isPlaying);
+  const play         = usePlayerStore(s => s.play);
+  const pause        = usePlayerStore(s => s.pause);
+  const resume       = usePlayerStore(s => s.resume);
 
-  const isCurrentTrack = currentTrack?.id === track.id;
-  const isThisPlaying  = isCurrentTrack && isPlaying;
+  const isCurrent = currentTrack?.id === track.id;
+  const isActive  = isCurrent && isPlaying;
 
   const handlePlay = () => {
-    if (isCurrentTrack) {
-      isPlaying ? pause() : resume();
-    } else {
-      play(track, queue ?? [track]);
-    }
+    if (isCurrent) { isPlaying ? pause() : resume(); }
+    else play(track, queue ?? [track]);
   };
 
-  return { isCurrentTrack, isThisPlaying, handlePlay };
+  return { isCurrent, isActive, handlePlay };
 }

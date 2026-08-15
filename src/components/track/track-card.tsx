@@ -21,7 +21,7 @@ interface TrackRowProps {
 }
 
 export function TrackRow({ track, index, queue, showArtist = true }: TrackRowProps) {
-  const { isCurrentTrack, isThisPlaying, handlePlay } = usePlayTrack(track, queue);
+  const { isCurrent, isActive, handlePlay } = usePlayTrack(track, queue);
   const addFav = useAddFavorite();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -31,15 +31,15 @@ export function TrackRow({ track, index, queue, showArtist = true }: TrackRowPro
       <div className={cn(
         'group flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors cursor-default',
         'hover:bg-secondary',
-        isCurrentTrack && 'bg-primary/5',
+        isCurrent && 'bg-primary/5',
       )}>
         {/* Index / play */}
         <div className="flex h-8 w-8 shrink-0 items-center justify-center">
-          {isCurrentTrack ? (
+          {isCurrent ? (
             <button type="button" onClick={handlePlay}
-              aria-label={isThisPlaying ? 'Pause' : 'Play'}
+              aria-label={isActive ? 'Pause' : 'Play'}
               className="text-primary">
-              {isThisPlaying
+              {isActive
                 ? <Pause className="h-4 w-4 fill-current" />
                 : <Play className="h-4 w-4 fill-current translate-x-px" />}
             </button>
@@ -69,7 +69,7 @@ export function TrackRow({ track, index, queue, showArtist = true }: TrackRowPro
 
         {/* Title + artist */}
         <div className="flex-1 min-w-0">
-          <p className={cn('truncate text-sm font-medium leading-tight', isCurrentTrack && 'text-primary')}>
+          <p className={cn('truncate text-sm font-medium leading-tight', isCurrent && 'text-primary')}>
             {track.title}
           </p>
           {showArtist && (
@@ -132,7 +132,7 @@ interface TrackCardProps {
 }
 
 export function TrackCard({ track, queue }: TrackCardProps) {
-  const { isCurrentTrack, isThisPlaying, handlePlay } = usePlayTrack(track, queue);
+  const { isCurrent, isActive, handlePlay } = usePlayTrack(track, queue);
 
   return (
     <Link href={ROUTES.TRACK(track.id)} className="group block space-y-3">
@@ -141,22 +141,22 @@ export function TrackCard({ track, queue }: TrackCardProps) {
         <button
           type="button"
           onClick={(e) => { e.preventDefault(); handlePlay(); }}
-          aria-label={isThisPlaying ? 'Pause' : `Play ${track.title}`}
+          aria-label={isActive ? 'Pause' : `Play ${track.title}`}
           className={cn(
             'absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full',
             'bg-primary text-primary-foreground shadow-lg',
             'translate-y-2 opacity-0 transition-all duration-200',
             'group-hover:translate-y-0 group-hover:opacity-100',
-            isCurrentTrack && 'translate-y-0 opacity-100',
+            isCurrent && 'translate-y-0 opacity-100',
           )}
         >
-          {isThisPlaying
+          {isActive
             ? <Pause className="h-4 w-4 fill-current" />
             : <Play className="h-4 w-4 fill-current translate-x-px" />}
         </button>
       </div>
       <div className="px-1">
-        <p className={cn('truncate text-sm font-medium', isCurrentTrack && 'text-primary')}>
+        <p className={cn('truncate text-sm font-medium', isCurrent && 'text-primary')}>
           {track.title}
         </p>
         <p className="truncate text-xs text-muted-foreground mt-0.5">

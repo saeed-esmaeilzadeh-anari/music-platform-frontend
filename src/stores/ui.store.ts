@@ -2,37 +2,31 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 interface UIState {
-  // Sidebar
-  sidebarCollapsed: boolean;
-  toggleSidebar: () => void;
-  setSidebarCollapsed: (v: boolean) => void;
-
-  // Mobile drawer (sidebar as sheet on small screens)
-  mobileDrawerOpen: boolean;
-  openMobileDrawer: () => void;
+  sidebarCollapsed:  boolean;
+  toggleSidebar:     () => void;
+  mobileDrawerOpen:  boolean;
+  openMobileDrawer:  () => void;
   closeMobileDrawer: () => void;
-
-   // Now-playing queue panel (optional expandable panel)
-  queuePanelOpen: boolean;
-  toggleQueuePanel: () => void;
+  queuePanelOpen:    boolean;
+  toggleQueuePanel:  () => void;
+  closeQueuePanel:   () => void;
 }
 
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
-      sidebarCollapsed: false,
-      toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
-      setSidebarCollapsed: (v) => set({ sidebarCollapsed: v }),
-      mobileDrawerOpen: false,
-      openMobileDrawer: () => set({ mobileDrawerOpen: true }),
+      sidebarCollapsed:  false,
+      toggleSidebar:     () => set(s => ({ sidebarCollapsed: !s.sidebarCollapsed })),
+      mobileDrawerOpen:  false,
+      openMobileDrawer:  () => set({ mobileDrawerOpen: true }),
       closeMobileDrawer: () => set({ mobileDrawerOpen: false }),
-      queuePanelOpen: false,
-      toggleQueuePanel: () => set((s) => ({ queuePanelOpen: !s.queuePanelOpen })),
+      queuePanelOpen:    false,
+      toggleQueuePanel:  () => set(s => ({ queuePanelOpen: !s.queuePanelOpen })),
+      closeQueuePanel:   () => set({ queuePanelOpen: false }),
     }),
     {
       name: 'ms-ui',
-      // Only persist sidebar collapse preference across sessions
-      partialize: (s) => ({ sidebarCollapsed: s.sidebarCollapsed }),
+      partialize: s => ({ sidebarCollapsed: s.sidebarCollapsed }),
     },
   ),
 );

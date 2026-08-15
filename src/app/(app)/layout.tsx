@@ -1,50 +1,39 @@
 import type { Metadata } from 'next';
 import { ProtectedRoute } from '@/components/auth/protected-route';
-import { Sidebar } from '@/components/layout/sidebar';
-import { TopBar } from '@/components/layout/topbar';
-import { PlayerBar } from '@/components/layout/player-bar';
-import { MobileDrawer } from '@/components/layout/mobile-drawer';
-import { QueuePanel } from '@/components/player/queue-panel';
-import { MiniPlayer } from '@/components/player/mini-player';
-import { KeyboardShortcutsHint } from '@/components/player/keyboard-shortcuts-hint';
+import { Sidebar }        from '@/components/layout/sidebar';
+import { TopBar }         from '@/components/layout/topbar';
+import { MobileDrawer }   from '@/components/layout/mobile-drawer';
+import { PlayerBar }      from '@/components/player/player-bar';
+import { PlayerShell }    from '@/components/player/player-shell';
 
 export const metadata: Metadata = {
   title: { default: 'Soundwave', template: '%s · Soundwave' },
 };
 
-/**
- * (app) layout — authenticated shell.
- *
- * Layout structure:
- * ┌──────────┬──────────────────────────┬──────────────┐
- * │          │  TopBar (h-16 sticky)    │              │
- * │ Sidebar  ├──────────────────────────┤  QueuePanel  │
- * │ (240px)  │  <page>  (scrollable)   │  (272px,     │
- * │ desktop  │                          │   when open) │
- * │          │                          │              │
- * ├──────────┴──────────────────────────┴──────────────┤
- * │  PlayerBar (h-20 sticky)                            │
- * └─────────────────────────────────────────────────────┘
- *
- * Mobile: sidebar → MobileDrawer sheet
- *         QueuePanel → full-height overlay
- *         MiniPlayer → floating bar when PlayerBar offscreen
- */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <ProtectedRoute>
+      {/*
+        Full-height flex row:
+          ┌──────────┬──────────────────────────────────────┐
+          │          │  TopBar                              │
+          │ Sidebar  ├───────────────────┬──────────────────┤
+          │          │  <page content>   │  QueuePanel      │
+          │          │  (scrolls alone)  │  (when open)     │
+          │          ├───────────────────┴──────────────────┤
+          │          │  PlayerBar                           │
+          └──────────┴──────────────────────────────────────┘
+        MiniPlayer and KeyboardShortcutsHint float above everything (fixed).
+      */}
       <div className="flex h-svh overflow-hidden">
-        {/* Desktop sidebar */}
         <Sidebar />
-
-        {/* Mobile nav drawer */}
         <MobileDrawer />
 
         {/* Main column */}
         <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
           <TopBar />
 
-          {/* Content row: page + optional queue panel */}
+          {/* Content + QueuePanel side-by-side */}
           <div className="flex flex-1 min-h-0 overflow-hidden">
             <main
               id="main-content"
@@ -53,19 +42,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {children}
             </main>
 
-            {/* Queue panel renders here on desktop (pushes content) */}
-            {/* On mobile it's a fixed overlay — see QueuePanel internals */}
-            <QueuePanel />
+            {/*
+              PlayerShell renders QueuePanel here as a sibling to <main>
+              (pushes content on desktop, overlays on mobile).
+              MiniPlayer and KeyboardShortcutsHint are position:fixed,
+              so they escape this stacking context automatically.
+            */}
+            <PlayerShell />
           </div>
 
-          {/* Bottom player — always visible */}
           <PlayerBar />
         </div>
       </div>
-
-      {/* Floating overlays: mini player (mobile) + keyboard hint (desktop) */}
-      <MiniPlayer />
-      <KeyboardShortcutsHint />
     </ProtectedRoute>
   );
 }

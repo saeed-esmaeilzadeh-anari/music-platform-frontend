@@ -383,3 +383,98 @@ DELETE /playlists/:id/tracks/:trackId → useRemoveTrackFromPlaylist
 PATCH /playlists/:id/tracks/:trackId  → useReorderPlaylistTrack
 POST /uploads/presign + PUT S3 + POST /uploads/confirm → usePlaylistCover
 GET  /tracks?search=&status=PUBLISHED → PlaylistAddTracksModal (debounced)
+
+-------------------------------------------------------------------------------------
+14050524  update all component Player
+-------------------------------------------------------------------------------------
+
+File map — 11 files
+src/
+├── stores/
+│   ├── player.store.ts          ← Extended (persist + seekTo + isLoading + recentlyPlayed + removeFromQueue + moveQueueItem)
+│   └── ui.store.ts              ← queuePanelOpen, sidebarCollapsed, mobileDrawerOpen
+│
+├── lib/audio/
+│   └── audio-engine.ts          ← Singleton HTMLAudioElement — subscribes to store, never touched by components
+│
+├── providers/
+│   └── audio-provider.tsx       ← Boots engine, fires POST /tracks/:id/play, registers keyboard shortcuts
+│
+├── hooks/
+│   └── use-player.ts            ← Granular selectors: useCurrentTrack, usePlayerProgress, usePlayTrack, etc.
+│
+├── components/player/
+│   ├── player-bar.tsx           ← Desktop bottom bar: SeekBar, VolumeControl, TransportControls, mobile strip
+│   ├── queue-panel.tsx          ← Inline panel (pushes content): Queue tab + Recently Played tab
+│   ├── mini-player.tsx          ← Mobile floating bar via IntersectionObserver on #player-bar-sentinel
+│   ├── keyboard-shortcuts-hint.tsx ← Floating ? button + modal with all 10 shortcuts
+│   └── player-shell.tsx         ← Composes QueuePanel + MiniPlayer + KeyboardShortcutsHint
+│
+└── app/(app)/
+    └── layout.tsx               ← Sidebar + TopBar + main + PlayerShell + PlayerBar
+Data flow — single direction
+User action (click / keyboard)
+    │
+    ▼
+usePlayerStore action (play, seekTo, togglePlay, …)
+    │
+    ▼
+AudioEngine.subscribe() detects state change
+    │
+    ├── track changed   → audio.src = newUrl; audio.load(); audio.play()
+    ├── isPlaying       → audio.play() / audio.pause()
+    ├── volume/mute     → audio.volume / audio.muted
+    ├── progressSec Δ > 1.5s → audio.currentTime = progressSec   (seek)
+    └── repeatMode      → audio.loop = repeatMode === 'one'
+    │
+    ▼
+DOM events write BACK to store
+    ├── timeupdate  → setProgress(audio.currentTime)
+    ├── duration    → setDuration(audio.duration)
+    ├── waiting     → setIsLoading(true)
+    ├── canplay     → setIsLoading(false)
+    └── ended       → playNext()
+How each feature is wired
+Feature	Store action	Engine reaction	UI
+Play/Pause	togglePlay()	audio.play() / audio.pause()	Play button in PlayerBar + MobileStrip + MiniPlayer
+Next/Prev	playNext() / playPrevious()	Loads new audio.src	SkipForward/Back buttons
+Seek bar	seekTo(sec) → setProgress	Engine detects Δ > 1.5s → audio.currentTime = sec	Clickable track in SeekBar
+Volume	setVolume(v)	audio.volume = v	Click track in VolumeControl
+Mute	toggleMute()	audio.muted = true	Volume icon button, M key
+Shuffle	toggleShuffle()	Builds shuffledIndices array	Shuffle button, Alt+S
+Repeat	cycleRepeat()	audio.loop for one mode	Repeat button, Alt+R
+Queue	addToQueue() / removeFromQueue()	—	QueuePanel list + ListMusic button
+Recently played	addToRecentlyPlayed() (in play())	—	QueuePanel Recent tab
+Persist	Zustand persist middleware	Engine reads persisted volume on boot	Restored across refresh
+Keyboard	AudioProvider keydown listener	Calls store actions	No UI — pure keyboard
+Mini player	IntersectionObserver	—	MiniPlayer (mobile only)
+Play registration	AudioProvider store subscriber	POST /tracks/:id/play at 30s	—
+Integration with the existing architecture
+
+AudioProvider must be added to RootProviders (src/providers/index.tsx) to boot the engine:
+
+tsx
+// src/providers/index.tsx
+import { AudioProvider } from './audio-provider';
+
+export function RootProviders({ children }) {
+  return (
+    <QueryProvider>
+      <ToastProvider>
+        <AudioProvider>          {/* ← add this */}
+          <AuthProvider>{children}</AuthProvider>
+        </AudioProvider>
+      </ToastProvider>
+    </QueryProvider>
+  );
+}
+
+usePlayTrack replaces any direct usePlayerStore calls in TrackRow and TrackCard:
+
+tsx
+// Before
+const { play } = usePlayerStore();
+const handlePlay = () => play(track, queue);
+
+// After
+const { handlePlay, isCurrent, isActive } = usePlayTrack(track, queue);
