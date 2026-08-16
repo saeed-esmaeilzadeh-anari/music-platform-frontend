@@ -478,3 +478,62 @@ const handlePlay = () => play(track, queue);
 
 // After
 const { handlePlay, isCurrent, isActive } = usePlayTrack(track, queue);
+
+-------------------------------------------------------------------------------------
+14050525  add component favorites  
+-------------------------------------------------------------------------------------
+
+
+Here's an exact breakdown of every decision.
+
+File map — 4 files
+src/
+├── hooks/
+│   └── use-favorites.ts               ← All data fetching, mutations, and local store
+│
+├── components/shared/
+│   └── favorite-button.tsx            ← Unified ♥ button for all three entity types
+│
+└── app/(app)/favorites/
+    ├── page.tsx                       ← Server wrapper, metadata title
+    └── favorites-client.tsx           ← Three-tab UI: Tracks / Albums / Artists
+Backend reality — why two different storage strategies
+
+The NestJS backend has one favorites endpoint — track favorites only:
+
+Method	Endpoint	Used for
+GET	/favorites?page=&limit=	Fetch user's favorite track IDs
+POST	/favorites	Add { trackId }
+DELETE	/favorites/:trackId	Remove
+
+There is no /favorites/albums or /favorites/artists endpoint. Rather than showing a broken UI or making up fake endpoints, album and artist favorites are stored in localStorage via Zustand persist under ms-local-favs. They survive page refresh, work offline, and the FavoriteButton component is identical for all three types.
+
+Optimistic update flow — track favorites
+toggle() called
+    │
+    ├── addFavorite.mutate(trackId)
+    │     onMutate:  adds trackId to Set in ['favorites', 'ids'] cache immediately
+    │     onError:   restores previous Set
+    │     onSettled: invalidates all favorites queries
+    │
+    └── removeFavorite.mutate(trackId)
+          onMutate:  removes trackId from ['favorites', 'ids'] cache immediately
+                     removes track from ['favorites', 'enriched'] list immediately
+          onError:   restores both caches
+          onSettled: invalidates all favorites queries
+
+The heart icon updates instantly with no loading state visible — the server call happens silently in the background.
+
+How to add FavoriteButton to existing pages
+tsx
+// Track detail page or track row
+<FavoriteButton targetType="track" targetId={track.id} size="md" />
+
+// Album detail hero
+<FavoriteButton targetType="album" targetId={album.id} size="lg" showLabel />
+
+// Artist detail hero
+<FavoriteButton targetType="artist" targetId={artist.id} size="md" />
+
+The size prop controls icon size (sm / md / lg). The showLabel prop adds "Favorite" / "Favorited" text beside the icon.
+
