@@ -537,3 +537,43 @@ tsx
 
 The size prop controls icon size (sm / md / lg). The showLabel prop adds "Favorite" / "Favorited" text beside the icon.
 
+-------------------------------------------------------------------------------------
+1400526 add components  Listening History
+-------------------------------------------------------------------------------------
+Presented file
+Here's the precise breakdown of every decision.
+
+File map — 4 files
+src/
+├── hooks/
+│   └── use-listening-history.ts          ← 5 exported hooks
+│
+├── services/
+│   └── listening-history.service.ts      ← GET /listening-history (copied from architecture)
+│
+└── app/(app)/history/
+    ├── page.tsx                           ← Server wrapper, metadata
+    └── history-client.tsx                ← 4 sections + ProgressRing + IntersectionObserver
+Backend reality — one endpoint, four views
+The NestJS GET /listening-history returns only raw records { id, trackId, playedAt, progressSec, completed }. There is no aggregation, no embedded track data, no dedicated "continue listening" or "most played" endpoint. Every feature is derived client-side:
+
+Feature	How it's built
+Recently Played	Fetch 60 records → deduplicate by trackId (keep most recent) → take top 20 → enrich with track data
+Continue Listening	Fetch 100 records → filter !completed → deduplicate → enrich → filter 5% ≤ progress ≤ 95%
+Most Played	Fetch 500 records → Map<trackId, count> → sort desc → take top 10 → enrich
+Full History	useInfiniteQuery with page + 1 pagination → raw rows, no enrichment needed
+Track enrichment strategy
+Every hook calls qc.fetchQuery({ queryKey: queryKeys.tracks.detail(id) }) per track. This:
+
+Hits the cache first if the track was already fetched by a track detail page or search
+Fires a real GET /tracks/:id only on cache miss
+Runs in parallel via Promise.all — all missing tracks fetched simultaneously
+Shares the cache across hooks — if Recently Played and Most Played both include the same track, it's fetched once
+Continue Listening — ProgressRing
+The SVG ring uses stroke-dashoffset to show completion percentage:
+
+circ = 2πr
+dashoffset = circ × (1 - pct)   → 0% played = full offset (empty ring)
+                                   95% played = small offset (nearly full)
+Tracks between 5% and 95% progress appear here. Below 5% = accidental play; above 95% = effectively complete.
+

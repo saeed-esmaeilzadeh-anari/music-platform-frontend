@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { MiniPlayer }              from './mini-player';
-import { KeyboardShortcutsHint }   from './keyboard-shortcuts-hint';
-import { QueuePanel }              from './queue-panel';
-import { useUIStore }              from '@/stores/ui.store';
+import { MiniPlayer } from "./mini-player";
+import { KeyboardShortcutsHint } from "./keyboard-shortcuts-hint";
+import { QueuePanel } from "./queue-panel";
+import { useUIStore } from "@/stores/ui.store";
 
 /**
  * PlayerShell
@@ -22,9 +22,7 @@ export function PlayerShell() {
   return (
     <>
       {/* Inline queue panel — pushes content sideways on desktop */}
-      {queuePanelOpen && (
-        <QueuePanel onClose={closeQueuePanel} />
-      )}
+      {queuePanelOpen && <QueuePanel onClose={closeQueuePanel} />}
 
       {/* Fixed overlays */}
       <MiniPlayer />
