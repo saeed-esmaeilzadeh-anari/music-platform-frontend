@@ -577,3 +577,66 @@ dashoffset = circ × (1 - pct)   → 0% played = full offset (empty ring)
                                    95% played = small offset (nearly full)
 Tracks between 5% and 95% progress appear here. Below 5% = accidental play; above 95% = effectively complete.
 
+-------------------------------------------------------------------------------------
+1400528 add components  comments
+-------------------------------------------------------------------------------------
+
+
+Here's the complete breakdown.
+
+File map — 6 files
+src/
+├── hooks/
+│   └── use-comments.ts                    ← useComments, useCreateComment, useUpdateComment, useDeleteComment
+│
+├── services/
+│   └── comments.service.ts                ← GET/POST/PATCH/DELETE /comments (existing architecture)
+│
+└── components/comments/
+    ├── index.ts                           ← Barrel export
+    ├── comment-form.tsx                   ← create / edit / reply modes, auto-resize, Cmd+Enter
+    ├── comment-item.tsx                   ← single comment row, edit/delete menu, avatar, replies
+    └── comment-thread.tsx                 ← full section: compose box, list, reply wiring, collapsible
+
+API endpoints consumed
+GET  /comments?targetType=TRACK&targetId=:id   → useComments
+POST /comments  { content, targetType, targetId, parentId? }  → useCreateComment
+PATCH /comments/:id  { content }               → useUpdateComment
+DELETE /comments/:id                           → useDeleteComment
+
+Optimistic update flow
+
+Mutation	onMutate	onError	onSettled
+Create	Appends { userId: '__optimistic__', ... } to cache immediately	Restores previous list	Invalidates query → replaces optimistic with real
+Edit	Sets content + isEdited: true on matching item	Restores previous list	Invalidates query
+Delete	Removes the comment AND all replies where parentId === id from cache	Restores previous list	Invalidates query
+
+How to integrate into track and album pages
+
+tsx
+// Track detail page — src/app/(app)/track/[id]/track-client.tsx
+import { CommentThread } from '@/components/comments';
+
+// Inside the JSX, below the track info:
+<CommentThread
+  targetType="TRACK"
+  targetId={track.id}
+  label="Comments"
+  collapsible={false}
+/>
+
+// Album detail page — src/app/(app)/album/[id]/album-client.tsx
+<CommentThread
+  targetType="ALBUM"
+  targetId={album.id}
+  label="Comments"
+  collapsible={true}   // starts collapsed on album page
+/>
+That's the entire public API — one component, two props. The hooks, form, and item components are all internal.
+
+Architecture decisions
+Username display — The CommentResponse contains userId but no username. The current user sees their own user.username from the auth store. All other users display as User {first8charsOfId}. This is intentional — a public /users/:id endpoint doesn't exist in this backend, so fetching usernames per-comment would be both expensive and potentially privacy-invasive.
+
+Reply nesting — Maximum one level deep, enforced in CommentItem via depth prop. The backend supports unlimited parentId chains but the UI limits nesting to keep readability high. Replies appear inline below their parent, indented with a left border.
+
+CommentItemWithReply — This wrapper lives in CommentThread so that useCreateComment (which needs targetType and targetId) stays at the thread level, keeping CommentItem a pure presentational component with no mutation dependencies.
