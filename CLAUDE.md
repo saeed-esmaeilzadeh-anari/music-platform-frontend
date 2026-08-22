@@ -578,7 +578,7 @@ dashoffset = circ × (1 - pct)   → 0% played = full offset (empty ring)
 Tracks between 5% and 95% progress appear here. Below 5% = accidental play; above 95% = effectively complete.
 
 -------------------------------------------------------------------------------------
-1400528 add components  comments
+14050528 add components  comments
 -------------------------------------------------------------------------------------
 
 
@@ -640,3 +640,62 @@ Username display — The CommentResponse contains userId but no username. The cu
 Reply nesting — Maximum one level deep, enforced in CommentItem via depth prop. The backend supports unlimited parentId chains but the UI limits nesting to keep readability high. Replies appear inline below their parent, indented with a left border.
 
 CommentItemWithReply — This wrapper lives in CommentThread so that useCreateComment (which needs targetType and targetId) stays at the thread level, keeping CommentItem a pure presentational component with no mutation dependencies.
+
+-------------------------------------------------------------------------------------
+14050531 add components  setting
+-------------------------------------------------------------------------------------
+Here's a precise breakdown of every decision.
+
+File map — 4 files
+src/
+├── stores/
+│   └── preferences.store.ts           ← Zustand persist — appearance, playback, notifs, privacy
+│
+├── hooks/
+│   └── use-account.ts                 ← useMe, useUpdateMe (optimistic), useLogoutAll, useDeleteAccount
+│
+└── app/(app)/settings/
+    ├── page.tsx                        ← Server wrapper, metadata title
+    └── settings-client.tsx            ← Full UI: sidebar nav + 6 sections
+What is backed by the real API vs localStorage
+Section	Storage	Endpoints used
+Profile (name, avatar)	Server	GET /users/me · PATCH /users/me
+Account (email, username, role)	Server — read-only	GET /users/me
+Password	Server — redirects to /forgot-password	Email-based flow (already implemented)
+Sessions	Server	POST /auth/logout-all
+Delete account	Server	DELETE /users/me
+Appearance (theme, accent)	localStorage via Zustand	—
+Playback (quality, crossfade, autoplay)	localStorage via Zustand	—
+Notifications (which types to show)	localStorage via Zustand	—
+Privacy (activity visibility)	localStorage via Zustand	—
+
+Every section that uses localStorage is clearly labeled with a "local" badge in the section header and a "Saved locally" footnote — no fake server calls, no silent failures.
+
+Profile update — optimistic flow
+PATCH /users/me dispatched
+    │
+    onMutate:  patches useMe() cache immediately (name/avatar visible at once)
+               also updates useAuthStore so TopBar avatar syncs
+    │
+    onError:   rolls back cache to previous snapshot
+    │
+    onSuccess: invalidates useMe() query → fresh server data replaces optimistic
+               calls setUser() on auth store with real values
+Preferences store shape
+ts
+{
+  theme:   'dark' | 'light' | 'system'
+  accent:  'violet' | 'blue' | 'emerald' | 'rose' | 'amber' | 'cyan'
+  playback: {
+    audioQuality:        'auto' | 'normal' | 'high' | 'lossless'
+    crossfadeSec:        0–12
+    autoplayRelated:     boolean
+    normalizeVolume:     boolean
+    showExplicitContent: boolean
+  }
+  notifs:  { newFollower, newRelease, playlistAdd, commentReply, likeReceived,
+             subscriptionRenewed, paymentFailed, systemMessages }
+  privacy: { showListeningActivity, showPlaylists, showFavorites, allowDataAnalytics }
+}
+
+Persisted under ms-prefs in localStorage. The player, notification centre, and search components can read from this store to implement the preferences (e.g. filter explicit tracks, apply crossfade duration, skip notification types).
