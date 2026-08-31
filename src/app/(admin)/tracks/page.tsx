@@ -185,6 +185,26 @@ function TrackFormDialog({ track, onClose }: { track: TrackResponse; onClose: ()
   );
 }
 
+/**
+ * Isolated component so useDeleteTrack is always called with a
+ * non-empty artistId (the hook closes over it at render time).
+ * Only mounted when deleteTarget is non-null.
+ */
+function DeleteTrackDialog({ track, onClose }: { track: TrackResponse; onClose: () => void }) {
+  const deleteTrack = useDeleteTrack(track.artist.id);
+  return (
+    <ConfirmDialog
+      open
+      onOpenChange={(o) => !o && onClose()}
+      title="حذف آهنگ"
+      description={`آیا از حذف آهنگ «${track.title}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.`}
+      confirmLabel="حذف آهنگ"
+      loading={deleteTrack.isPending}
+      onConfirm={() => deleteTrack.mutate(track.id, { onSuccess: onClose })}
+    />
+  );
+}
+
 export default function AdminTracksPage() {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
@@ -218,8 +238,6 @@ export default function AdminTracksPage() {
     status: statusFilter === 'ALL' ? undefined : statusFilter,
     artistId: artistFilter === 'ALL' ? undefined : artistFilter,
   });
-  const deleteTrack = useDeleteTrack(deleteTarget?.artist.id ?? '');
-
   return (
     <div>
       <PageHeader
@@ -359,18 +377,12 @@ export default function AdminTracksPage() {
 
       {editingTrack && <TrackFormDialog track={editingTrack} onClose={() => setEditingTrack(null)} />}
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(o) => !o && setDeleteTarget(null)}
-        title="حذف آهنگ"
-        description={`آیا از حذف آهنگ «${deleteTarget?.title}» مطمئن هستید؟ این عملیات غیرقابل بازگشت است.`}
-        confirmLabel="حذف آهنگ"
-        loading={deleteTrack.isPending}
-        onConfirm={() => {
-          if (!deleteTarget) return;
-          deleteTrack.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
-        }}
-      />
+      {deleteTarget && (
+        <DeleteTrackDialog
+          track={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
     </div>
   );
 }

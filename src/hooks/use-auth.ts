@@ -39,7 +39,7 @@ export function useRegister() {
   const router = useRouter();
 
   return useMutation({
-    mutationFn: (dto: Omit<RegisterDto, 'confirmPassword'>) => authService.register(dto),
+    mutationFn: (dto: RegisterDto) => authService.register(dto),
     onSuccess: (data) => {
       login(data.user, data.accessToken, data.refreshToken);
       success('Account created!', 'Welcome to Soundwave.');

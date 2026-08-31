@@ -36,12 +36,12 @@ export const ROUTES = {
   PLAYLIST: (id: string) => `/playlist/${id}`,
 
   // Admin
-  ADMIN: "/admin/dashboard",
-  ADMIN_USERS: "/admin/users",
-  ADMIN_GENRES: "/admin/genres",
-  ADMIN_ARTISTS: "/admin/artists",
-  ADMIN_ALBUMS: "/admin/albums",
-  ADMIN_TRACKS: "/admin/tracks",
+  ADMIN: "/dashboard",
+  ADMIN_USERS: "/users",
+  ADMIN_GENRES: "/genres",
+  ADMIN_ARTISTS: "/artists",
+  ADMIN_ALBUMS: "/albums",
+  ADMIN_TRACKS: "/tracks",
 } as const;
 
 // ─── API ──────────────────────────────────────────────────────────────────────

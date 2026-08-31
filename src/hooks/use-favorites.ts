@@ -22,7 +22,7 @@
  *   const { isFavorited, toggle, isPending } = useIsFavoriteArtist(artistId)
  */
 
-import { useMutation, useQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { favoritesService } from '@/services/favorites.service';

@@ -24,11 +24,12 @@ export function useMe() {
 }
 
 export function useUpdateMe() {
-  const qc = useQueryClient();
+  const qc             = useQueryClient();
   const { success, error } = useToast();
   return useMutation({
     mutationFn: (dto: UpdateUserDto) => usersService.updateMe(dto),
     onSuccess: () => {
+      // Invalidate so every consumer of useMe() gets fresh data
       qc.invalidateQueries({ queryKey: queryKeys.users.me() });
       success('Profile updated');
     },

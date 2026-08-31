@@ -10,7 +10,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateProfileSchema, type UpdateProfileFormValues } from '@/lib/validators';
-import { useMe, useUpdateMe, useLogoutAll, useDeleteAccount } from '@/hooks/use-account';
+import { useMe, useUpdateMe } from '@/hooks/use-user-data';
+import { useLogoutAll } from '@/hooks/use-auth';
+import { useDeleteAccount } from '@/hooks/use-account';
 import {
   usePreferencesStore,
   type ThemeMode, type AccentColor, type AudioQuality,

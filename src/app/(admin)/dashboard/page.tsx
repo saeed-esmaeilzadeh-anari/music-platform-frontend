@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Users, Mic2, AudioLines, Disc3, Sparkles, ArrowLeft, TrendingUp, Music } from 'lucide-react';
+import { Users, Mic2, AudioLines, Disc3, Sparkles, ArrowLeft, TrendingUp, Music2 } from 'lucide-react';
 import { PageHeader } from '@/components/admin/page-header';
 import { StatCard } from '@/components/admin/stat-card';
 import { Card, CardBody, CardHeader, CardTitle } from '@/components/admin/card';
@@ -44,7 +44,7 @@ function GreetingBanner() {
           </p>
         </div>
         <div className="hidden shrink-0 sm:flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 border border-primary/20">
-          <Music className="h-7 w-7 text-primary" aria-hidden />
+          <Music2 className="h-7 w-7 text-primary" aria-hidden />
         </div>
       </div>
     </div>

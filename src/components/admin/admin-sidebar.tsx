@@ -29,16 +29,16 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
   {
     title: 'مدیریت جامعه',
     items: [
-      { href: ROUTES.ADMIN_USERS, label: 'کاربران', icon: Users },
-      { href: ROUTES.ADMIN_ARTISTS, label: 'هنرمندان', icon: Mic2 },
+      { href: ROUTES.ADMIN_USERS,   label: 'کاربران',  icon: Users  },
+      { href: ROUTES.ADMIN_ARTISTS, label: 'هنرمندان', icon: Mic2   },
     ],
   },
   {
     title: 'مدیریت محتوا',
     items: [
-      { href: ROUTES.ADMIN_ALBUMS, label: 'آلبوم‌ها', icon: Disc3 },
-      { href: ROUTES.ADMIN_TRACKS, label: 'آهنگ‌ها', icon: AudioLines },
-      { href: ROUTES.ADMIN_GENRES, label: 'ژانرها', icon: Tags },
+      { href: ROUTES.ADMIN_ALBUMS, label: 'آلبوم‌ها', icon: Disc3     },
+      { href: ROUTES.ADMIN_TRACKS, label: 'آهنگ‌ها',  icon: AudioLines },
+      { href: ROUTES.ADMIN_GENRES, label: 'ژانرها',   icon: Tags       },
     ],
   },
 ];
@@ -50,7 +50,7 @@ function BrandMark() {
         {[3, 5, 7, 5, 4].map((h, i) => (
           <span
             key={i}
-            className="w-[3px] rounded-full bg-primary transition-colors group-hover:bg-accent"
+            className="w-[3px] rounded-full bg-primary transition-colors group-hover:bg-primary/70"
             style={{ height: `${h * 3}px` }}
           />
         ))}
@@ -73,6 +73,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
 
   const content = (
     <>
+      {/* Brand header */}
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-border px-5">
         <BrandMark />
         <button
@@ -85,29 +86,43 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
         </button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-5">
+      {/* Nav */}
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="ناوبری مدیریت">
         {NAV_SECTIONS.map((section) => (
-          <div key={section.title} className="mb-5 last:mb-0">
-            <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
+          <div key={section.title} className="mb-4 last:mb-0">
+            {/* Section heading — matches Velzon's sidebar group labels */}
+            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
               {section.title}
             </p>
-            <ul className="space-y-1">
+            <ul className="space-y-0.5" role="list">
               {section.items.map((item) => {
-                const active = pathname === item.href;
-                const Icon = item.icon;
+                const active = pathname === item.href || pathname.startsWith(item.href + '/');
+                const Icon   = item.icon;
                 return (
                   <li key={item.href}>
                     <Link
                       href={item.href}
                       onClick={onClose}
                       className={cn(
-                        'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                        'relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-150',
                         active
-                          ? 'bg-primary/15 text-primary'
+                          ? 'bg-primary/12 text-primary'
                           : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
                       )}
                     >
-                      <Icon className={cn('h-[18px] w-[18px] shrink-0', active && 'text-primary')} />
+                      {/* Velzon-style active left-border accent */}
+                      {active && (
+                        <span
+                          className="absolute end-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-primary"
+                          aria-hidden
+                        />
+                      )}
+                      <Icon
+                        className={cn(
+                          'h-[18px] w-[18px] shrink-0 transition-colors',
+                          active ? 'text-primary' : 'text-muted-foreground/70',
+                        )}
+                      />
                       {item.label}
                     </Link>
                   </li>
@@ -118,7 +133,8 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
         ))}
       </nav>
 
-      <div className="shrink-0 border-t border-border p-4">
+      {/* Footer */}
+      <div className="shrink-0 border-t border-border p-3">
         <Link
           href={ROUTES.BROWSE}
           className="flex items-center gap-2.5 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
@@ -145,7 +161,9 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
         )}
         role="dialog"
         aria-modal="true"
+        aria-label="منوی ناوبری"
       >
+        {/* Backdrop */}
         <div
           className={cn(
             'absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-200',
@@ -153,6 +171,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
           )}
           onClick={onClose}
         />
+        {/* Drawer */}
         <aside
           className={cn(
             'absolute top-0 flex h-full w-[280px] flex-col bg-sidebar-bg shadow-2xl transition-transform duration-200 ease-out',
