@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { tracksService } from '@/services/tracks.service';
-import { queryKeys } from '@/lib/constants/query-keys';
-import { STALE_TIME } from '@/lib/constants';
-import { useToast } from '@/providers/toast-provider';
-import { extractApiError } from '@/lib/utils/index';
-import type { CreateTrackDto, TrackQuery, UpdateTrackDto } from '@/types';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { tracksService } from "@/services/tracks.service";
+import { queryKeys } from "@/lib/constants/query-keys";
+import { STALE_TIME } from "@/lib/constants";
+import { useToast } from "@/providers/toast-provider";
+import { extractApiError } from "@/lib/utils/index";
+import type { CreateTrackDto, TrackQuery, UpdateTrackDto } from "@/types";
 
 // ─── Queries ──────────────────────────────────────────────────────────────────
 
@@ -21,7 +21,14 @@ export function useTracks(query?: TrackQuery) {
 export function useTrack(id: string) {
   return useQuery({
     queryKey: queryKeys.tracks.detail(id),
-    queryFn: () => tracksService.findById(id),
+
+    queryFn: () => {
+      console.log("========== useTrack ==========");
+      console.log("REQUEST ID:", id);
+
+      return tracksService.findById(id);
+    },
+
     staleTime: STALE_TIME.STANDARD,
     enabled: !!id,
   });
@@ -36,10 +43,10 @@ export function useCreateTrack(artistId: string) {
   return useMutation({
     mutationFn: (dto: CreateTrackDto) => tracksService.create(artistId, dto),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tracks'] });
-      success('Track created', 'Upload the audio file next.');
+      qc.invalidateQueries({ queryKey: ["tracks"] });
+      success("Track created", "Upload the audio file next.");
     },
-    onError: (err) => error('Failed to create track', extractApiError(err)),
+    onError: (err) => error("Failed to create track", extractApiError(err)),
   });
 }
 
@@ -52,10 +59,10 @@ export function useUpdateTrack(artistId: string) {
       tracksService.update(artistId, trackId, dto),
     onSuccess: (track) => {
       qc.invalidateQueries({ queryKey: queryKeys.tracks.detail(track.id) });
-      qc.invalidateQueries({ queryKey: ['tracks'] });
-      success('Track updated');
+      qc.invalidateQueries({ queryKey: ["tracks"] });
+      success("Track updated");
     },
-    onError: (err) => error('Failed to update track', extractApiError(err)),
+    onError: (err) => error("Failed to update track", extractApiError(err)),
   });
 }
 
@@ -66,10 +73,10 @@ export function useDeleteTrack(artistId: string) {
   return useMutation({
     mutationFn: (trackId: string) => tracksService.delete(artistId, trackId),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tracks'] });
-      success('Track deleted');
+      qc.invalidateQueries({ queryKey: ["tracks"] });
+      success("Track deleted");
     },
-    onError: (err) => error('Failed to delete track', extractApiError(err)),
+    onError: (err) => error("Failed to delete track", extractApiError(err)),
   });
 }
 
