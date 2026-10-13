@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { AuthWavePanel } from '@/components/auth/auth-wave-panel';
 import { AuthFormShell } from '@/components/auth/auth-form-shell';
 import { RegisterForm } from '@/components/auth/register-form';
+import { RedirectIfAuthenticated } from '@/components/auth/redirect-if-authenticated';
 import { ROUTES } from '@/lib/constants';
 
 export const metadata: Metadata = {
@@ -12,6 +13,8 @@ export const metadata: Metadata = {
 export default function RegisterPage() {
   return (
     <main className="flex min-h-svh bg-background">
+      <RedirectIfAuthenticated />
+
       {/* Left panel — distinct copy from login */}
       <AuthWavePanel
         heading="Join the sound."

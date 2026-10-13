@@ -1,0 +1,60 @@
+From af508651ddc7ba59ecc6ff7c687d2e404c859135 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Sun, 11 Oct 2026 06:41:36 +0000
+Subject: [PATCH 2/2] feat(auth): send already-signed-in visitors from /login
+ and /register to /browse
+
+Without this, opening / for a user who still has a session shows the sign-in form.
+The guard keys off the stored tokens (not the persisted zustand isAuthenticated flag),
+because the 401 interceptor clears tokens but leaves that flag behind, which would
+cause a /login <-> /browse redirect loop.
+---
+ src/app/(auth)/login/page.tsx    | 3 +++
+ src/app/(auth)/register/page.tsx | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/src/app/(auth)/login/page.tsx b/src/app/(auth)/login/page.tsx
+index b69cc8d..3ca6724 100644
+--- a/src/app/(auth)/login/page.tsx
++++ b/src/app/(auth)/login/page.tsx
+@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
+ import { AuthWavePanel } from '@/components/auth/auth-wave-panel';
+ import { AuthFormShell } from '@/components/auth/auth-form-shell';
+ import { LoginForm } from '@/components/auth/login-form';
++import { RedirectIfAuthenticated } from '@/components/auth/redirect-if-authenticated';
+ import { ROUTES } from '@/lib/constants';
+ 
+ export const metadata: Metadata = {
+@@ -12,6 +13,8 @@ export const metadata: Metadata = {
+ export default function LoginPage() {
+   return (
+     <main className="flex min-h-svh bg-background">
++      <RedirectIfAuthenticated />
++
+       {/* ── Left: atmospheric panel with waveform ── */}
+       <AuthWavePanel
+         heading="Music lives here."
+diff --git a/src/app/(auth)/register/page.tsx b/src/app/(auth)/register/page.tsx
+index 95f4a3c..bb7316b 100644
+--- a/src/app/(auth)/register/page.tsx
++++ b/src/app/(auth)/register/page.tsx
+@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
+ import { AuthWavePanel } from '@/components/auth/auth-wave-panel';
+ import { AuthFormShell } from '@/components/auth/auth-form-shell';
+ import { RegisterForm } from '@/components/auth/register-form';
++import { RedirectIfAuthenticated } from '@/components/auth/redirect-if-authenticated';
+ import { ROUTES } from '@/lib/constants';
+ 
+ export const metadata: Metadata = {
+@@ -12,6 +13,8 @@ export const metadata: Metadata = {
+ export default function RegisterPage() {
+   return (
+     <main className="flex min-h-svh bg-background">
++      <RedirectIfAuthenticated />
++
+       {/* Left panel — distinct copy from login */}
+       <AuthWavePanel
+         heading="Join the sound."
+-- 
+2.43.0
+
