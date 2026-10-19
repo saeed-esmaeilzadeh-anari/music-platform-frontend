@@ -45,6 +45,7 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
 ];
 
 function BrandMark() {
+  const { t } = useLocale();
   return (
     <Link href={ROUTES.ADMIN} className="group flex items-center gap-2.5" aria-label="داشبورد Soundwave">
       <span className="flex h-8 items-end gap-[3px]" aria-hidden>
