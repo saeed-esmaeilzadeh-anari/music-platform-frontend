@@ -16,7 +16,8 @@ import {
   ListMusic,
   Heart,
 } from "lucide-react";
-import { cn, formatDuration } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { formatLocalizedDuration } from '@/lib/i18n/format';
 import { usePlayerStore } from "@/stores/player.store";
 import {
   usePlayerProgress,
@@ -29,7 +30,7 @@ import { useLocale } from '@/providers/locale-provider';
 // ─── Seek bar ─────────────────────────────────────────────────────────────────
 
 function SeekBar() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const { progressSec, durationSec, seekTo, pct } = usePlayerProgress();
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -49,7 +50,7 @@ function SeekBar() {
   return (
     <div className="flex w-full items-center gap-2.5">
       <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-muted-foreground">
-        {formatDuration(progressSec)}
+        {formatLocalizedDuration(progressSec, locale)}
       </span>
       <div
         ref={trackRef}
@@ -77,7 +78,7 @@ function SeekBar() {
         />
       </div>
       <span className="w-9 shrink-0 text-[10px] tabular-nums text-muted-foreground">
-        {formatDuration(durationSec)}
+        {formatLocalizedDuration(durationSec, locale)}
       </span>
     </div>
   );
