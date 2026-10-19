@@ -300,3 +300,31 @@
   from { transform: translateX(-100%); }
   to   { transform: translateX(0); }
 }
+
+
+/* ── Persian / RTL admin polish inspired by Velzon ─────────────────────── */
+html[dir="rtl"] { text-rendering: optimizeLegibility; }
+body { font-family: var(--font-iransansweb), Tahoma, sans-serif; }
+button, input, textarea, select { font: inherit; }
+.admin-workspace { min-height: 100svh; }
+.admin-page-content { width: 100%; max-width: 1680px; margin-inline: auto; }
+.admin-panel {
+  border: 1px solid hsl(var(--border));
+  border-radius: 1rem;
+  background: linear-gradient(145deg, hsl(var(--card)) 0%, hsl(var(--background)) 100%);
+  box-shadow: 0 8px 28px rgb(0 0 0 / 0.08);
+}
+.admin-sidebar-link { min-height: 42px; }
+.admin-stat-card { min-width: 0; overflow-wrap: anywhere; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.admin-stat-card:hover { transform: translateY(-2px); border-color: hsl(var(--primary) / .35); box-shadow: 0 12px 28px rgb(0 0 0 / .12); }
+.admin-table-wrap { width: 100%; overflow-x: auto; overscroll-behavior-inline: contain; }
+.admin-table-wrap table { min-width: 620px; }
+.admin-page-title { font-size: clamp(1.2rem, 2vw, 1.65rem); line-height: 1.5; }
+@media (max-width: 640px) {
+  .admin-page-content { padding-inline: 0; }
+  .admin-table-wrap { margin-inline: -0.25rem; width: calc(100% + .5rem); }
+  .admin-table-wrap table { min-width: 560px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-stat-card, .admin-stat-card:hover { transition: none; transform: none; }
+}
