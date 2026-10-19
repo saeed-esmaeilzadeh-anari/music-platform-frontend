@@ -7,10 +7,11 @@ import { ROUTES } from '@/lib/constants';
 import { cookies } from 'next/headers';
 import { messages, type Locale } from '@/lib/i18n/messages';
 
-export const metadata: Metadata = {
-  title: 'Sign in',
-  description: 'Sign in to your Soundwave account.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const isEnglish = cookieStore.get('NEXT_LOCALE')?.value === 'en';
+  return { title: isEnglish ? 'Sign in' : 'ورود', description: isEnglish ? 'Sign in to your Soundwave account.' : 'برای ورود به حساب ساندوِیو وارد شوید.' };
+}
 
 export default async function LoginPage() {
   const cookieStore = await cookies();
