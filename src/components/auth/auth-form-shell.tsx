@@ -27,7 +27,8 @@ export function AuthFormShell({
 }: AuthFormShellProps) {
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-5 py-10 sm:px-8 overflow-y-auto">
-      <div className="relative w-full max-w-[400px] space-y-7">\n        <div className="flex justify-end"><LanguageSwitcher /></div>
+      <div className="relative w-full max-w-[400px] space-y-7">
+        <div className="flex justify-end"><LanguageSwitcher /></div>
         {/* Mobile-only wordmark — the panel is hidden on small screens */}
         <Link
           href={ROUTES.BROWSE}
