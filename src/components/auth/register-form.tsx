@@ -14,8 +14,10 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Button } from "@/components/ui/button";
 import { ApiErrorAlert } from "@/components/ui/api-error-alert";
 import { Divider } from "@/components/ui/divider";
+import { useLocale } from '@/providers/locale-provider';
 
 export function RegisterForm() {
+  const { t } = useLocale();
   const emailId = useId();
   const usernameId = useId();
   const firstNameId = useId();
@@ -70,7 +72,7 @@ export function RegisterForm() {
 
       {/* Email */}
       <FormField
-        label="Email"
+        label={t("forms.email")}
         error={errors.email?.message}
         required
         id={emailId}
@@ -91,7 +93,7 @@ export function RegisterForm() {
 
       {/* Username */}
       <FormField
-        label="Username"
+        label={t("forms.username")}
         error={errors.username?.message}
         required
         id={usernameId}
@@ -113,7 +115,7 @@ export function RegisterForm() {
       {/* First + Last name — side by side */}
       <div className="grid grid-cols-2 gap-3">
         <FormField
-          label="First name"
+          label={t("forms.firstName")}
           error={errors.firstName?.message}
           id={firstNameId}
         >
@@ -121,7 +123,7 @@ export function RegisterForm() {
             id={firstNameId}
             type="text"
             autoComplete="given-name"
-            placeholder="Jane"
+            placeholder={t("forms.firstNamePlaceholder")}
             error={!!errors.firstName}
             leftIcon={<UserCircle className="h-4 w-4" />}
             {...register("firstName")}
@@ -130,7 +132,7 @@ export function RegisterForm() {
         </FormField>
 
         <FormField
-          label="Last name"
+          label={t("forms.lastName")}
           error={errors.lastName?.message}
           id={lastNameId}
         >
@@ -138,7 +140,7 @@ export function RegisterForm() {
             id={lastNameId}
             type="text"
             autoComplete="family-name"
-            placeholder="Doe"
+            placeholder={t("forms.lastNamePlaceholder")}
             error={!!errors.lastName}
             {...register("lastName")}
           />
@@ -150,7 +152,7 @@ export function RegisterForm() {
 
       {/* Password */}
       <FormField
-        label="Password"
+        label={t("forms.password")}
         error={errors.password?.message}
         required
         id={passwordId}
@@ -158,7 +160,7 @@ export function RegisterForm() {
         <PasswordInput
           id={passwordId}
           autoComplete="new-password"
-          placeholder="Min 8 characters"
+          placeholder={t("forms.passwordHint")}
           error={errors.password?.message}
           {...register("password")}
         />
@@ -167,7 +169,7 @@ export function RegisterForm() {
 
       {/* Confirm password */}
       <FormField
-        label="Confirm password"
+        label={t("forms.confirmPassword")}
         error={errors.confirmPassword?.message}
         required
         id={confirmId}
@@ -175,7 +177,7 @@ export function RegisterForm() {
         <PasswordInput
           id={confirmId}
           autoComplete="new-password"
-          placeholder="Re-enter your password"
+          placeholder={t("forms.confirmPasswordHint")}
           error={errors.confirmPassword?.message}
           {...register("confirmPassword")}
         />
@@ -194,19 +196,11 @@ export function RegisterForm() {
         loading={isSubmitting || registerMutation.isPending}
         disabled={isSubmitting || registerMutation.isPending}
       >
-        Create account
+        {t("forms.signUp")}
       </Button>
 
       <p className="text-center text-xs text-muted-foreground/60 leading-relaxed">
-        By creating an account you agree to our{" "}
-        <span className="text-muted-foreground underline underline-offset-2 cursor-pointer">
-          Terms of Service
-        </span>{" "}
-        and{" "}
-        <span className="text-muted-foreground underline underline-offset-2 cursor-pointer">
-          Privacy Policy
-        </span>
-        .
+        {t("forms.terms")}
       </p>
     </form>
   );
@@ -222,10 +216,10 @@ function PasswordStrengthHints({ password }: StrengthHintsProps) {
   if (!password) return null;
 
   const checks = [
-    { label: "At least 8 characters", ok: password.length >= 8 },
-    { label: "One uppercase letter", ok: /[A-Z]/.test(password) },
-    { label: "One lowercase letter", ok: /[a-z]/.test(password) },
-    { label: "One number", ok: /\d/.test(password) },
+    { label: t("forms.atLeast8"), ok: password.length >= 8 },
+    { label: t("forms.uppercase"), ok: /[A-Z]/.test(password) },
+    { label: t("forms.lowercase"), ok: /[a-z]/.test(password) },
+    { label: t("forms.number"), ok: /\d/.test(password) },
   ];
 
   const passCount = checks.filter((c) => c.ok).length;
@@ -243,7 +237,7 @@ function PasswordStrengthHints({ password }: StrengthHintsProps) {
     <div
       className="space-y-2.5"
       aria-live="polite"
-      aria-label="Password strength"
+      aria-label={t("forms.passwordStrength")}
     >
       {/* Segmented bar */}
       <div className="flex gap-1" aria-hidden>
