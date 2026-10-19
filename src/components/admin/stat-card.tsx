@@ -25,7 +25,7 @@ const TONE_ICON_BG: Record<NonNullable<StatCardProps['tone']>, string> = {
 export function StatCard({ label, value, icon: Icon, tone = 'primary', hint, trend, loading }: StatCardProps) {
   return (
     <div className={cn(
-      'rounded-lg border border-border bg-card p-5 shadow-sm',
+      'admin-stat-card rounded-xl border border-border bg-card p-4 shadow-sm sm:p-5',
       'transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:border-border/80',
     )}>
       <div className="flex items-start justify-between gap-3">
