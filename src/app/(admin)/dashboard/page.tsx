@@ -37,35 +37,30 @@ import { cn } from '@/lib/utils';
 
 type Tone = 'violet' | 'blue' | 'green' | 'amber' | 'rose';
 
-const toneStyles: Record<Tone, { icon: string; accent: string; bar: string; border: string }> = {
+const toneStyles: Record<Tone, { icon: string; accent: string; border: string }> = {
   violet: {
     icon: 'bg-violet-500/12 text-violet-300 ring-violet-400/20',
     accent: 'from-violet-500/15',
-    bar: 'bg-violet-400',
     border: 'hover:border-violet-400/35',
   },
   blue: {
     icon: 'bg-sky-500/12 text-sky-300 ring-sky-400/20',
     accent: 'from-sky-500/15',
-    bar: 'bg-sky-400',
     border: 'hover:border-sky-400/35',
   },
   green: {
     icon: 'bg-emerald-500/12 text-emerald-300 ring-emerald-400/20',
     accent: 'from-emerald-500/15',
-    bar: 'bg-emerald-400',
     border: 'hover:border-emerald-400/35',
   },
   amber: {
     icon: 'bg-amber-500/12 text-amber-300 ring-amber-400/20',
     accent: 'from-amber-500/15',
-    bar: 'bg-amber-400',
     border: 'hover:border-amber-400/35',
   },
   rose: {
     icon: 'bg-rose-500/12 text-rose-300 ring-rose-400/20',
     accent: 'from-rose-500/15',
-    bar: 'bg-rose-400',
     border: 'hover:border-rose-400/35',
   },
 };
@@ -367,7 +362,7 @@ export default function AdminDashboardPage() {
 
   const metrics: {
     label: string;
-    value: number;
+    value: number | undefined;
     description: string;
     icon: LucideIcon;
     tone: Tone;
@@ -575,7 +570,7 @@ export default function AdminDashboardPage() {
               <CardBody className="space-y-3">
                 {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-12 w-full" />)}
               </CardBody>
-            ) : usersError && !recentUsers ? (
+            ) : usersError && (!recentUsers || !recentUsers.items.length) ? (
               <RetryPanel
                 title="دریافت کاربران ناموفق بود"
                 description="فهرست کاربران در دسترس نیست. دوباره تلاش کنید."
@@ -631,7 +626,7 @@ export default function AdminDashboardPage() {
               <CardBody className="space-y-3">
                 {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-12 w-full" />)}
               </CardBody>
-            ) : tracksError && !recentTracks ? (
+            ) : tracksError && !tracks.length ? (
               <RetryPanel
                 title="دریافت آهنگ‌ها ناموفق بود"
                 description="فهرست آهنگ‌ها در دسترس نیست. دوباره تلاش کنید."
