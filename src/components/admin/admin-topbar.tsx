@@ -29,7 +29,7 @@ interface AdminTopbarProps {
 }
 
 export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   // useMe() shares the same query key AuthProvider primes on boot, so this
   // reads from cache rather than firing a second request — but it exposes
   // the full profile (firstName, avatarUrl) that the lightweight Zustand
@@ -70,12 +70,12 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
         <button
           type="button"
           className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-          aria-label="اعلان‌ها"
+          aria-label={t("common.notifications")}
         >
           <Bell className="h-[18px] w-[18px]" />
           {!!unread?.count && (
             <span className="absolute end-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-destructive-foreground">
-              {toFaDigits(unread.count > 9 ? '9+' : String(unread.count))}
+              {locale === 'fa' ? toFaDigits(unread.count > 9 ? '9+' : String(unread.count)) : unread.count > 9 ? '9+' : unread.count}
             </span>
           )}
         </button>
@@ -93,14 +93,14 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
                 {me?.firstName ? `${me.firstName} ${me.lastName ?? ''}`.trim() : me?.username}
               </p>
               <p className="mt-0.5 text-xs text-muted-foreground">
-                {me?.role ? FA_ROLE_LABELS[me.role] : ''} · {me?.email}
+                {me?.role ? (locale === 'fa' ? FA_ROLE_LABELS[me.role] : ({ LISTENER: 'Listener', ARTIST: 'Artist', MODERATOR: 'Moderator', ADMIN: 'Admin' } as const)[me.role]) : ''} · {me?.email}
               </p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
               <Link href={ROUTES.PROFILE} className="flex items-center gap-2.5">
                 <UserIcon className="h-4 w-4" />
-                پروفایل من
+                {t('common.profile')}
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -110,7 +110,7 @@ export function AdminTopbar({ onMenuClick }: AdminTopbarProps) {
               className="flex items-center gap-2.5"
             >
               <LogOut className="h-4 w-4" />
-              خروج از حساب
+              {t('common.logout')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
