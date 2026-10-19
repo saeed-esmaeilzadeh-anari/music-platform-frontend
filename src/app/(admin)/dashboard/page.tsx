@@ -35,7 +35,7 @@ import { cn } from '@/lib/utils';
 
 type Tone = 'violet' | 'blue' | 'green' | 'amber' | 'rose';
 
-const toneStyles: Record<Tone, { icon: string; accent: string; border: string }> = {
+const toneStyles: Record<Tone, { icon: string; accent: string; bar: string; border: string }> = {
   violet: {
     icon: 'bg-violet-500/12 text-violet-300 ring-violet-400/20',
     accent: 'from-violet-500/15',
