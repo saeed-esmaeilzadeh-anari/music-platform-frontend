@@ -18,7 +18,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { ApiErrorAlert } from '@/components/ui/api-error-alert';
 import { useLocale } from '@/providers/locale-provider';
 
-export function LoginForm() {\n  const { t } = useLocale();
+export function LoginForm() {
+  const { t } = useLocale();
   const emailId = useId();
   const passwordId = useId();
   const rememberMeId = useId();
