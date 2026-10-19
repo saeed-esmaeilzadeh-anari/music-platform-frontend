@@ -17,19 +17,19 @@ import { useLocale } from '@/providers/locale-provider';
 interface NavItem { label: string; href: string; icon: React.ElementType; roles?: string[] }
 
 const PRIMARY_NAV: NavItem[] = [
-  { label: 'Home',    href: ROUTES.HOME,    icon: Home },
-  { label: 'Search',  href: ROUTES.SEARCH,  icon: Search },
-  { label: 'Library', href: ROUTES.LIBRARY, icon: Library },
+  { label: 'navigation.home',    href: ROUTES.HOME,    icon: Home },
+  { label: 'navigation.search',  href: ROUTES.SEARCH,  icon: Search },
+  { label: 'navigation.library', href: ROUTES.LIBRARY, icon: Library },
 ];
 
 const PERSONAL_NAV: NavItem[] = [
-  { label: 'Favourites', href: ROUTES.LIBRARY, icon: Heart },
-  { label: 'History',    href: ROUTES.HISTORY, icon: History },
-  { label: 'Upload',     href: ROUTES.UPLOAD,  icon: Upload, roles: ['ARTIST', 'ADMIN'] },
+  { label: 'navigation.favourites', href: ROUTES.LIBRARY, icon: Heart },
+  { label: 'navigation.history',    href: ROUTES.HISTORY, icon: History },
+  { label: 'navigation.upload',     href: ROUTES.UPLOAD,  icon: Upload, roles: ['ARTIST', 'ADMIN'] },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { label: 'Dashboard', href: ROUTES.ADMIN, icon: LayoutDashboard },
+  { label: 'navigation.dashboard', href: ROUTES.ADMIN, icon: LayoutDashboard },
 ];
 
 function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {\n  const { t } = useLocale();
