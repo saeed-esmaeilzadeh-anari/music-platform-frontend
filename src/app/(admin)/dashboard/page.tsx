@@ -39,26 +39,31 @@ const toneStyles: Record<Tone, { icon: string; accent: string; border: string }>
   violet: {
     icon: 'bg-violet-500/12 text-violet-300 ring-violet-400/20',
     accent: 'from-violet-500/15',
+    bar: 'bg-violet-400',
     border: 'hover:border-violet-400/35',
   },
   blue: {
     icon: 'bg-sky-500/12 text-sky-300 ring-sky-400/20',
     accent: 'from-sky-500/15',
+    bar: 'bg-sky-400',
     border: 'hover:border-sky-400/35',
   },
   green: {
     icon: 'bg-emerald-500/12 text-emerald-300 ring-emerald-400/20',
     accent: 'from-emerald-500/15',
+    bar: 'bg-emerald-400',
     border: 'hover:border-emerald-400/35',
   },
   amber: {
     icon: 'bg-amber-500/12 text-amber-300 ring-amber-400/20',
     accent: 'from-amber-500/15',
+    bar: 'bg-amber-400',
     border: 'hover:border-amber-400/35',
   },
   rose: {
     icon: 'bg-rose-500/12 text-rose-300 ring-rose-400/20',
     accent: 'from-rose-500/15',
+    bar: 'bg-rose-400',
     border: 'hover:border-rose-400/35',
   },
 };
@@ -106,7 +111,7 @@ function MetricCard({
         </span>
       </div>
       <div className="relative mt-4 h-1 overflow-hidden rounded-full bg-secondary">
-        <div className={cn('h-full w-2/3 rounded-full bg-gradient-to-l to-transparent opacity-70', style.accent.replace('from-', 'from-').replace('/15', '/80'))} />
+        <div className={cn('h-full w-2/3 rounded-full bg-gradient-to-l to-transparent opacity-70', style.bar)} />
       </div>
     </article>
   );
@@ -239,8 +244,8 @@ function RecentTrackStatus({
                   <span
                     key={status.key}
                     className={cn('h-full transition-all', status.color)}
-                    style={{ width: \`\${(count / total) * 100}%\` }}
-                    title={\`\${status.label}: \${formatFaNumber(count)}\`}
+                    style={{ width: `${(count / total) * 100}%` }}
+                    title={`${status.label}: ${formatFaNumber(count)}`}
                   />
                 ) : null;
               })}
@@ -259,7 +264,7 @@ function RecentTrackStatus({
                       <span className={cn('font-semibold tabular-nums', status.text)}>{formatFaNumber(count)} <span className="font-normal text-muted-foreground">({formatFaNumber(percent)}٪)</span></span>
                     </div>
                     <div className="h-1.5 overflow-hidden rounded-full bg-secondary">
-                      <div className={cn('h-full rounded-full transition-all duration-500', status.color)} style={{ width: \`\${percent}%\` }} />
+                      <div className={cn('h-full rounded-full transition-all duration-500', status.color)} style={{ width: `${percent}%` }} />
                     </div>
                   </div>
                 );
@@ -479,7 +484,7 @@ export default function AdminDashboardPage() {
                             {(user.firstName?.[0] || user.username?.[0] || '؟').toLocaleUpperCase('fa-IR')}
                           </span>
                           <div className="min-w-0">
-                            <p className="max-w-[180px] truncate font-medium">{user.firstName ? \`\${user.firstName} \${user.lastName ?? ''}\`.trim() : user.username}</p>
+                            <p className="max-w-[180px] truncate font-medium">{user.firstName ? `${user.firstName} ${user.lastName ?? ''}`.trim() : user.username}</p>
                             <p className="max-w-[180px] truncate text-xs text-muted-foreground" dir="ltr">{user.email}</p>
                           </div>
                         </div>
