@@ -19,6 +19,7 @@ import { ROUTES, ROLE_LABELS } from '@/lib/constants';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLogout } from '@/hooks/use-auth';
 import { useUnreadNotificationCount } from '@/hooks/use-user-data';
+import { useLocale } from '@/providers/locale-provider';
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
 
@@ -87,6 +88,7 @@ function MenuItem({ href, onClick, icon: Icon, label, badge, destructive }: Menu
 // ─── UserMenu ─────────────────────────────────────────────────────────────────
 
 export function UserMenu() {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { user } = useAuthStore();
@@ -129,7 +131,7 @@ export function UserMenu() {
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label="User menu"
+        aria-label={t("common.profile")}
         className={cn(
           'flex items-center gap-2 rounded-full pl-1 pr-2 py-1',
           'border border-transparent hover:border-border hover:bg-secondary',
@@ -180,14 +182,14 @@ export function UserMenu() {
 
           {/* Menu items */}
           <nav className="p-1.5 space-y-0.5" role="none">
-            <MenuItem href={ROUTES.PROFILE}       icon={User}     label="Profile" />
-            <MenuItem href={ROUTES.NOTIFICATIONS} icon={Bell}     label="Notifications" badge={unreadCount > 0 ? unreadCount : undefined} />
+            <MenuItem href={ROUTES.PROFILE}       icon={User}     label={t("common.profile")} />
+            <MenuItem href={ROUTES.NOTIFICATIONS} icon={Bell}     label={t("common.notifications")} badge={unreadCount > 0 ? unreadCount : undefined} />
             <MenuItem href={ROUTES.HISTORY}       icon={History}  label="Listening history" />
             {(user.role === 'ARTIST' || user.role === 'ADMIN') && (
               <MenuItem href={ROUTES.UPLOAD}      icon={Upload}   label="Upload track" />
             )}
-            <MenuItem href={ROUTES.SUBSCRIPTION}  icon={CreditCard} label="Subscription" />
-            <MenuItem href={ROUTES.SETTINGS}      icon={Settings} label="Settings" />
+            <MenuItem href={ROUTES.SUBSCRIPTION}  icon={CreditCard} label={t("common.subscription")} />
+            <MenuItem href={ROUTES.SETTINGS}      icon={Settings} label={t("common.settings")} />
           </nav>
 
           <div className="border-t border-border p-1.5">
