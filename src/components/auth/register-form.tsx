@@ -213,6 +213,7 @@ interface StrengthHintsProps {
 }
 
 function PasswordStrengthHints({ password }: StrengthHintsProps) {
+  const { t } = useLocale();
   if (!password) return null;
 
   const checks = [
