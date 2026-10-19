@@ -155,7 +155,8 @@ export function TopBar() {
       <TopSearchBar />
 
       {/* Right actions */}
-      <div className="flex items-center gap-1.5 ml-auto">\n        <LanguageSwitcher compact />
+      <div className="flex items-center gap-1.5 ml-auto">
+        <LanguageSwitcher compact />
         {isAuthenticated ? (
           <>
             <NotificationBell />
