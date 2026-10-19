@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { RootProviders } from "@/providers";
+import { LocaleProvider } from "@/providers/locale-provider";
+import type { Locale } from "@/lib/i18n/messages";
 import localFont from "next/font/local";
 
 const iransansweb = localFont({
@@ -17,17 +20,24 @@ const iransansweb = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "ساندوِیو | پلتفرم موسیقی",
-    template: "%s | ساندوِیو",
+    default: "Soundwave | Music Platform",
+    template: "%s | Soundwave",
   },
-  description: "پلتفرم فارسی موسیقی برای شنوندگان، هنرمندان و مدیران محتوا.",
+  description: "A music platform for listeners, artists, and content managers.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
+  const locale: Locale = cookieLocale === "en" ? "en" : "fa";
+  const dir = locale === "fa" ? "rtl" : "ltr";
+
   return (
-    <html lang="fa" dir="rtl" className={`${iransansweb.variable} dark font-iransansweb antialiased bg-background text-foreground`} suppressHydrationWarning>
+    <html lang={locale} dir={dir} className={`${iransansweb.variable} dark font-iransansweb antialiased bg-background text-foreground`} suppressHydrationWarning>
       <body className="min-h-svh bg-background font-iransansweb antialiased text-foreground">
-        <RootProviders>{children}</RootProviders>
+        <LocaleProvider initialLocale={locale}>
+          <RootProviders>{children}</RootProviders>
+        </LocaleProvider>
       </body>
     </html>
   );
