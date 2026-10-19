@@ -1,9 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import {
   Activity,
+  AlertCircle,
   ArrowLeft,
   AudioLines,
   CalendarDays,
@@ -77,7 +79,7 @@ function MetricCard({
   loading,
 }: {
   label: string;
-  value: number;
+  value: number | undefined;
   description: string;
   icon: LucideIcon;
   tone: Tone;
@@ -101,7 +103,7 @@ function MetricCard({
             <Skeleton className="mt-3 h-8 w-24" />
           ) : (
             <p className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl" dir="ltr">
-              {formatFaNumber(value)}
+              {value === undefined ? '—' : formatFaNumber(value)}
             </p>
           )}
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{description}</p>
@@ -110,17 +112,26 @@ function MetricCard({
           <Icon className="h-5 w-5 sm:h-[22px] sm:w-[22px]" aria-hidden />
         </span>
       </div>
-      <div className="relative mt-4 h-1 overflow-hidden rounded-full bg-secondary">
-        <div className={cn('h-full w-2/3 rounded-full bg-gradient-to-l to-transparent opacity-70', style.bar)} />
-      </div>
     </article>
   );
 }
 
 function DashboardWelcome() {
   const { data: me } = useMe();
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'صبح بخیر' : hour < 17 ? 'روز بخیر' : 'شب بخیر';
+  const [now, setNow] = useState<Date | null>(null);
+
+  useEffect(() => {
+    setNow(new Date());
+  }, []);
+
+  const hour = now?.getHours();
+  const greeting = hour === undefined
+    ? 'سلام'
+    : hour < 12
+      ? 'صبح بخیر'
+      : hour < 17
+        ? 'روز بخیر'
+        : 'شب بخیر';
 
   return (
     <section className="relative mb-6 overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-l from-primary/15 via-card to-card">
@@ -146,7 +157,9 @@ function DashboardWelcome() {
           </span>
           <div>
             <p className="text-[11px] text-muted-foreground">امروز</p>
-            <p className="mt-1 text-sm font-semibold text-foreground">{formatJalaliDate(new Date())}</p>
+            <p className="mt-1 text-sm font-semibold text-foreground" aria-live="polite">
+              {now ? formatJalaliDate(now) : 'در حال آماده‌سازی…'}
+            </p>
           </div>
         </div>
       </div>
@@ -211,9 +224,13 @@ const trackStatuses: { key: TrackStatus; label: string; color: string; text: str
 function RecentTrackStatus({
   tracks,
   loading,
+  error,
+  onRetry,
 }: {
   tracks: { status: TrackStatus }[];
   loading: boolean;
+  error: boolean;
+  onRetry: () => void;
 }) {
   const total = tracks.length;
 
@@ -233,6 +250,13 @@ function RecentTrackStatus({
           <div className="space-y-4">
             {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-8 w-full" />)}
           </div>
+        ) : error && total === 0 ? (
+          <RetryPanel
+            title="دریافت وضعیت آهنگ‌ها ناموفق بود"
+            description="ارتباط با سرویس آهنگ‌ها برقرار نشد. دوباره تلاش کنید."
+            onRetry={onRetry}
+            compact
+          />
         ) : total === 0 ? (
           <EmptyState title="هنوز آهنگی ثبت نشده است" description="با بارگذاری اولین آهنگ، وضعیت انتشار در این بخش نمایش داده می‌شود." className="py-8" />
         ) : (
@@ -277,23 +301,64 @@ function RecentTrackStatus({
   );
 }
 
+function RetryPanel({
+  title,
+  description,
+  onRetry,
+  compact = false,
+}: {
+  title: string;
+  description: string;
+  onRetry: () => void;
+  compact?: boolean;
+}) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'flex flex-col items-center justify-center gap-3 px-5 text-center',
+        compact ? 'py-6' : 'min-h-44 py-8',
+      )}
+    >
+      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+        <AlertCircle className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="space-y-1">
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="max-w-md text-xs leading-5 text-muted-foreground">{description}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onRetry}
+        className="inline-flex h-9 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground transition-colors hover:border-primary/40 hover:bg-secondary"
+      >
+        <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+        تلاش دوباره
+      </button>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const {
     data: stats,
     isLoading: statsLoading,
     isFetching: statsFetching,
+    isError: statsError,
     refetch: refetchStats,
   } = useAdminDashboard();
   const {
     data: recentUsers,
     isLoading: usersLoading,
     isFetching: usersFetching,
+    isError: usersError,
     refetch: refetchUsers,
   } = useAdminUsers({ page: 1, limit: 5 });
   const {
     data: recentTracks,
     isLoading: tracksLoading,
     isFetching: tracksFetching,
+    isError: tracksError,
     refetch: refetchTracks,
   } = useTracks({ page: 1, limit: 5 });
 
@@ -307,11 +372,11 @@ export default function AdminDashboardPage() {
     icon: LucideIcon;
     tone: Tone;
   }[] = [
-    { label: 'کاربران ثبت‌نام‌شده', value: stats?.totalUsers ?? 0, description: 'کل حساب‌های ثبت‌شده', icon: Users, tone: 'blue' },
-    { label: 'هنرمندان', value: stats?.totalArtists ?? 0, description: 'پروفایل‌های هنرمندی', icon: Mic2, tone: 'violet' },
-    { label: 'آهنگ‌ها', value: stats?.totalTracks ?? 0, description: 'کل آهنگ‌های ثبت‌شده', icon: AudioLines, tone: 'green' },
-    { label: 'آلبوم‌ها', value: stats?.totalAlbums ?? 0, description: 'مجموعه‌های موسیقی', icon: Disc3, tone: 'amber' },
-    { label: 'اشتراک‌های فعال', value: stats?.activeSubscriptions ?? 0, description: 'اشتراک‌های در حال اعتبار', icon: Sparkles, tone: 'rose' },
+    { label: 'کاربران ثبت‌نام‌شده', value: stats?.totalUsers, description: 'کل حساب‌های ثبت‌شده', icon: Users, tone: 'blue' },
+    { label: 'هنرمندان', value: stats?.totalArtists, description: 'پروفایل‌های هنرمندی', icon: Mic2, tone: 'violet' },
+    { label: 'آهنگ‌ها', value: stats?.totalTracks, description: 'کل آهنگ‌های ثبت‌شده', icon: AudioLines, tone: 'green' },
+    { label: 'آلبوم‌ها', value: stats?.totalAlbums, description: 'مجموعه‌های موسیقی', icon: Disc3, tone: 'amber' },
+    { label: 'اشتراک‌های فعال', value: stats?.activeSubscriptions, description: 'اشتراک‌های در حال اعتبار', icon: Sparkles, tone: 'rose' },
   ];
 
   return (
@@ -342,6 +407,23 @@ export default function AdminDashboardPage() {
       />
 
       <DashboardWelcome />
+
+      {(statsError || usersError || tracksError) && (
+        <div role="status" className="flex flex-col gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs leading-5 text-muted-foreground">
+            بخشی از اطلاعات داشبورد دریافت نشد. ممکن است بعضی شاخص‌ها یا فهرست‌ها ناقص باشند.
+          </p>
+          <button
+            type="button"
+            onClick={() => { void Promise.all([refetchStats(), refetchUsers(), refetchTracks()]); }}
+            disabled={refreshing}
+            className="inline-flex h-9 shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-xs font-medium text-foreground hover:bg-secondary disabled:opacity-60"
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', refreshing && 'animate-spin')} />
+            تلاش مجدد
+          </button>
+        </div>
+      )}
 
       <section>
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -379,15 +461,22 @@ export default function AdminDashboardPage() {
             <CardBody className="flex min-h-[230px] items-center justify-center">
               {statsLoading ? (
                 <Skeleton className="h-40 w-40 rounded-full" />
-              ) : (
+              ) : statsError && !stats ? (
+                <RetryPanel
+                  title="آمار در دسترس نیست"
+                  description="برای نمایش نمودار، دریافت آمار از سرویس مدیریت باید موفق باشد."
+                  onRetry={() => { void refetchStats(); }}
+                  compact
+                />
+              ) : stats ? (
                 <DonutChart
                   segments={[
-                    { label: 'هنرمندان', value: stats?.totalArtists ?? 0, colorVar: 'hsl(263 75% 66%)' },
-                    { label: 'آلبوم‌ها', value: stats?.totalAlbums ?? 0, colorVar: 'hsl(38 92% 55%)' },
-                    { label: 'آهنگ‌ها', value: stats?.totalTracks ?? 0, colorVar: 'hsl(160 60% 45%)' },
+                    { label: 'هنرمندان', value: stats.totalArtists, colorVar: 'hsl(263 75% 66%)' },
+                    { label: 'آلبوم‌ها', value: stats.totalAlbums, colorVar: 'hsl(38 92% 55%)' },
+                    { label: 'آهنگ‌ها', value: stats.totalTracks, colorVar: 'hsl(160 60% 45%)' },
                   ]}
                 />
-              )}
+              ) : <p className="text-sm text-muted-foreground">آماری برای نمایش وجود ندارد.</p>}
             </CardBody>
           </Card>
 
@@ -408,24 +497,37 @@ export default function AdminDashboardPage() {
                   <Skeleton className="h-3 w-full rounded-full" />
                   <Skeleton className="h-12 w-full" />
                 </>
-              ) : (
+              ) : statsError && !stats ? (
+                <RetryPanel
+                  title="آمار اشتراک‌ها در دسترس نیست"
+                  description="دریافت اطلاعات از سرویس مدیریت ناموفق بود."
+                  onRetry={() => { void refetchStats(); }}
+                  compact
+                />
+              ) : stats ? (
                 <>
                   <div className="flex items-end justify-between gap-3">
                     <div>
                       <p className="text-xs text-muted-foreground">اشتراک فعال</p>
-                      <p className="mt-1 text-3xl font-bold text-foreground" dir="ltr">{formatFaNumber(stats?.activeSubscriptions ?? 0)}</p>
+                      <p className="mt-1 text-3xl font-bold text-foreground" dir="ltr">{formatFaNumber(stats.activeSubscriptions)}</p>
                     </div>
                     <div className="text-left">
                       <p className="text-xs text-muted-foreground">کل کاربران</p>
-                      <p className="mt-1 text-lg font-semibold text-foreground" dir="ltr">{formatFaNumber(stats?.totalUsers ?? 0)}</p>
+                      <p className="mt-1 text-lg font-semibold text-foreground" dir="ltr">{formatFaNumber(stats.totalUsers)}</p>
                     </div>
                   </div>
-                  <RatioBar
-                    label="درصد نسبت به کاربران"
-                    numerator={stats?.activeSubscriptions ?? 0}
-                    denominator={stats?.totalUsers ?? 0}
-                    colorVar="hsl(263 75% 66%)"
-                  />
+                  {stats.totalUsers > 0 ? (
+                    <RatioBar
+                      label="درصد نسبت به کاربران"
+                      numerator={stats.activeSubscriptions}
+                      denominator={stats.totalUsers}
+                      colorVar="hsl(263 75% 66%)"
+                    />
+                  ) : (
+                    <p className="rounded-lg bg-secondary/60 p-3 text-xs leading-5 text-muted-foreground">
+                      برای محاسبه نسبت، ابتدا باید اطلاعات کاربران در دسترس باشد.
+                    </p>
+                  )}
                   <div className="flex items-start gap-2 rounded-xl border border-border bg-background/50 p-3">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
                     <p className="text-xs leading-5 text-muted-foreground">
@@ -433,12 +535,17 @@ export default function AdminDashboardPage() {
                     </p>
                   </div>
                 </>
-              )}
+              ) : <p className="text-sm text-muted-foreground">آماری برای نمایش وجود ندارد.</p>}
             </CardBody>
           </Card>
 
           <div className="xl:col-span-3">
-            <RecentTrackStatus tracks={tracks} loading={tracksLoading} />
+            <RecentTrackStatus
+              tracks={tracks}
+              loading={tracksLoading}
+              error={tracksError}
+              onRetry={() => { void refetchTracks(); }}
+            />
           </div>
         </div>
       </section>
@@ -468,6 +575,13 @@ export default function AdminDashboardPage() {
               <CardBody className="space-y-3">
                 {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-12 w-full" />)}
               </CardBody>
+            ) : usersError && !recentUsers ? (
+              <RetryPanel
+                title="دریافت کاربران ناموفق بود"
+                description="فهرست کاربران در دسترس نیست. دوباره تلاش کنید."
+                onRetry={() => { void refetchUsers(); }}
+                compact
+              />
             ) : !recentUsers?.items.length ? (
               <EmptyState title="کاربری یافت نشد" description="پس از ثبت‌نام کاربران، اطلاعات آن‌ها در این بخش دیده می‌شود." />
             ) : (
@@ -517,6 +631,13 @@ export default function AdminDashboardPage() {
               <CardBody className="space-y-3">
                 {Array.from({ length: 4 }).map((_, index) => <Skeleton key={index} className="h-12 w-full" />)}
               </CardBody>
+            ) : tracksError && !recentTracks ? (
+              <RetryPanel
+                title="دریافت آهنگ‌ها ناموفق بود"
+                description="فهرست آهنگ‌ها در دسترس نیست. دوباره تلاش کنید."
+                onRetry={() => { void refetchTracks(); }}
+                compact
+              />
             ) : !tracks.length ? (
               <EmptyState title="آهنگی یافت نشد" description="آهنگ‌های ثبت‌شده پس از دریافت از API در این بخش نمایش داده می‌شوند." />
             ) : (
