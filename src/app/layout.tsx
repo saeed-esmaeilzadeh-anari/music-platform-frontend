@@ -18,13 +18,14 @@ const iransansweb = localFont({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Soundwave | Music Platform",
-    template: "%s | Soundwave",
-  },
-  description: "A music platform for listeners, artists, and content managers.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const isEnglish = cookieStore.get("NEXT_LOCALE")?.value === "en";
+  return {
+    title: { default: isEnglish ? "Soundwave | Music Platform" : "ساندوِیو | پلتفرم موسیقی", template: isEnglish ? "%s | Soundwave" : "%s | ساندوِیو" },
+    description: isEnglish ? "A music platform for listeners, artists, and content managers." : "پلتفرم موسیقی برای شنوندگان، هنرمندان و مدیران محتوا.",
+  };
+}
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const cookieStore = await cookies();
