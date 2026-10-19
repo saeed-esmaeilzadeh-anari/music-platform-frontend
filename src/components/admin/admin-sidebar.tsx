@@ -94,7 +94,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
           <div key={locale === 'fa' ? section.title : ({ 'کلی': 'General', 'مدیریت جامعه': 'Community management', 'مدیریت محتوا': 'Content management' } as Record<string, string>)[section.title] ?? section.title} className="mb-4 last:mb-0">
             {/* Section heading — matches Velzon's sidebar group labels */}
             <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-              {section.title}
+              {locale === 'fa' ? section.title : ({ 'کلی': 'General', 'مدیریت جامعه': 'Community management', 'مدیریت محتوا': 'Content management' } as Record<string, string>)[section.title] ?? section.title}
             </p>
             <ul className="space-y-0.5" role="list">
               {section.items.map((item) => {
