@@ -30,11 +30,8 @@ function SentState({ email }: { email: string }) {
       {/* Copy */}
       <div className="space-y-2">
         <h3 className="text-lg font-semibold text-foreground">{t("forms.checkInbox")}</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          {t("forms.ifEmailExists")}{' '}
-          <span className="font-medium text-foreground">{email}</span>{' '}
-          is linked to a Soundwave account, you&apos;ll receive a password reset link within a few minutes.
-        </p>
+        <p className="text-sm text-muted-foreground leading-relaxed">{t("forms.ifEmailExists")}</p>
+        <p className="text-sm font-medium text-foreground" dir="ltr">{email}</p>
       </div>
 
       {/* Hints */}
