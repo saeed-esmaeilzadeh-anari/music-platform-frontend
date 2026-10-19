@@ -24,10 +24,12 @@ import {
   usePlayerTransport,
 } from "@/hooks/use-player";
 import { useUIStore } from "@/stores/ui.store";
+import { useLocale } from '@/providers/locale-provider';
 
 // ─── Seek bar ─────────────────────────────────────────────────────────────────
 
 function SeekBar() {
+  const { t } = useLocale();
   const { progressSec, durationSec, seekTo, pct } = usePlayerProgress();
   const trackRef = useRef<HTMLDivElement>(null);
 
@@ -53,7 +55,7 @@ function SeekBar() {
         ref={trackRef}
         onClick={handleClick}
         role="slider"
-        aria-label="Seek"
+        aria-label={t("common.seek")}
         aria-valuemin={0}
         aria-valuemax={durationSec}
         aria-valuenow={progressSec}
@@ -84,6 +86,7 @@ function SeekBar() {
 // ─── Volume control ───────────────────────────────────────────────────────────
 
 function VolumeControl({ className }: { className?: string }) {
+  const { t } = useLocale();
   const { volume, isMuted, setVolume, toggleMute, effective } =
     usePlayerVolume();
   const VolumeIcon =
@@ -94,7 +97,7 @@ function VolumeControl({ className }: { className?: string }) {
       <button
         type="button"
         onClick={toggleMute}
-        aria-label={isMuted ? "Unmute" : "Mute"}
+        aria-label={isMuted ? t("common.unmute") : t("common.mute")}
         className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
       >
         <VolumeIcon className="h-4 w-4" aria-hidden />
@@ -102,7 +105,7 @@ function VolumeControl({ className }: { className?: string }) {
       <div
         className="group relative h-1 w-20 cursor-pointer rounded-full bg-secondary"
         role="slider"
-        aria-label="Volume"
+        aria-label={t("common.volume")}
         aria-valuemin={0}
         aria-valuemax={1}
         aria-valuenow={effective}
@@ -134,6 +137,7 @@ function VolumeControl({ className }: { className?: string }) {
 // ─── Now playing info ──────────────────────────────────────────────────────────
 
 function NowPlayingInfo() {
+  const { t } = useLocale();
   // const { currentTrack, isLoading } = usePlayerStore(s => ({
   //   currentTrack: s.currentTrack,
   //   isLoading:    s.isLoading,
@@ -145,7 +149,7 @@ function NowPlayingInfo() {
   if (!currentTrack) {
     return (
       <p className="text-xs text-muted-foreground/40 select-none">
-        Nothing playing
+        {t("common.nothingPlaying")}
       </p>
     );
   }
@@ -189,7 +193,7 @@ function NowPlayingInfo() {
       {/* Like */}
       <button
         type="button"
-        aria-label="Like track"
+        aria-label={t("common.likeTrack")}
         className="ml-1 shrink-0 text-muted-foreground hover:text-primary transition-colors"
       >
         <Heart className="h-3.5 w-3.5" aria-hidden />
@@ -201,6 +205,7 @@ function NowPlayingInfo() {
 // ─── Transport controls ────────────────────────────────────────────────────────
 
 function TransportControls() {
+  const { t } = useLocale();
   //   const { currentTrack, isPlaying, repeatMode, isShuffled } = usePlayerStore(
   //     (s) => ({
   //       currentTrack: s.currentTrack,
@@ -224,7 +229,7 @@ function TransportControls() {
       <button
         type="button"
         onClick={toggleShuffle}
-        aria-label="Shuffle"
+        aria-label={t("common.shuffle")}
         aria-pressed={isShuffled}
         className={cn(
           "relative text-muted-foreground hover:text-foreground transition-colors",
@@ -240,7 +245,7 @@ function TransportControls() {
       <button
         type="button"
         onClick={playPrevious}
-        aria-label="Previous"
+        aria-label={t("common.previous")}
         disabled={!currentTrack}
         className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
       >
@@ -264,7 +269,7 @@ function TransportControls() {
       <button
         type="button"
         onClick={playNext}
-        aria-label="Next"
+        aria-label={t("common.next")}
         disabled={!currentTrack}
         className="text-muted-foreground hover:text-foreground transition-colors disabled:opacity-30"
       >
