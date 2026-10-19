@@ -19,6 +19,7 @@ import { usersService } from '@/services/users.service';
 import { useAuthStore } from '@/stores/auth.store';
 import { useToast }     from '@/providers/toast-provider';
 import { extractApiError } from '@/lib/utils';
+import { ROUTES }         from '@/lib/constants';
 
 // ─── Delete account (DELETE /users/me) ───────────────────────────────────────
 
@@ -31,7 +32,7 @@ export function useDeleteAccount() {
     mutationFn: () => usersService.deleteMe(),
     onSuccess: () => {
       logout();
-      router.replace('/');
+      router.replace(ROUTES.LOGIN);
     },
     onError: (err) => error('Deletion failed', extractApiError(err)),
   });
