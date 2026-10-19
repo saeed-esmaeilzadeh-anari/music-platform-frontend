@@ -10,10 +10,13 @@ import { useUIStore } from '@/stores/ui.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useUnreadNotificationCount } from '@/hooks/use-user-data';
 import { UserMenu } from './user-menu';
+import { LanguageSwitcher } from './language-switcher';
+import { useLocale } from '@/providers/locale-provider';
 
 // ─── Inline search bar ────────────────────────────────────────────────────────
 
 function TopSearchBar() {
+  const { t } = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const isSearchPage = pathname === ROUTES.SEARCH;
@@ -44,8 +47,8 @@ function TopSearchBar() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Artists, albums, tracks…"
-          aria-label="Search music"
+          placeholder={t("common.searchPlaceholder")}
+          aria-label={t("common.searchMusic")}
           className={cn(
             'w-full rounded-full bg-secondary border border-border',
             'pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground/60',
@@ -57,7 +60,7 @@ function TopSearchBar() {
           <button
             type="button"
             onClick={() => setQuery('')}
-            aria-label="Clear search"
+            aria-label={t("common.clearSearch")}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <X className="h-3.5 w-3.5" aria-hidden />
@@ -71,13 +74,14 @@ function TopSearchBar() {
 // ─── History nav buttons ──────────────────────────────────────────────────────
 
 function HistoryButtons() {
+  const { t } = useLocale();
   const router = useRouter();
   return (
     <div className="hidden sm:flex items-center gap-1">
       <button
         type="button"
         onClick={() => router.back()}
-        aria-label="Go back"
+        aria-label={t("common.goBack")}
         className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ChevronLeft className="h-4 w-4" aria-hidden />
@@ -85,7 +89,7 @@ function HistoryButtons() {
       <button
         type="button"
         onClick={() => router.forward()}
-        aria-label="Go forward"
+        aria-label={t("common.goForward")}
         className="flex h-7 w-7 items-center justify-center rounded-full bg-black/30 text-muted-foreground hover:text-foreground transition-colors"
       >
         <ChevronRight className="h-4 w-4" aria-hidden />
@@ -97,13 +101,14 @@ function HistoryButtons() {
 // ─── Notification bell ────────────────────────────────────────────────────────
 
 function NotificationBell() {
+  const { t } = useLocale();
   const { data } = useUnreadNotificationCount();
   const unread = data?.count ?? 0;
 
   return (
     <Link
       href={ROUTES.NOTIFICATIONS}
-      aria-label={unread > 0 ? `${unread} unread notifications` : 'Notifications'}
+      aria-label={unread > 0 ? `${unread} unread notifications` : t('common.notifications')}
       className={cn(
         'relative flex h-8 w-8 items-center justify-center rounded-full',
         'text-muted-foreground hover:text-foreground hover:bg-secondary',
@@ -126,6 +131,7 @@ function NotificationBell() {
 // ─── TopBar ───────────────────────────────────────────────────────────────────
 
 export function TopBar() {
+  const { t } = useLocale();
   const { openMobileDrawer } = useUIStore();
   const { isAuthenticated } = useAuthStore();
 
@@ -136,7 +142,7 @@ export function TopBar() {
       <button
         type="button"
         onClick={openMobileDrawer}
-        aria-label="Open navigation"
+        aria-label={t("common.openNavigation")}
         className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors lg:hidden"
       >
         <Menu className="h-5 w-5" aria-hidden />
@@ -149,7 +155,7 @@ export function TopBar() {
       <TopSearchBar />
 
       {/* Right actions */}
-      <div className="flex items-center gap-1.5 ml-auto">
+      <div className="flex items-center gap-1.5 ml-auto">\n        <LanguageSwitcher compact />
         {isAuthenticated ? (
           <>
             <NotificationBell />
