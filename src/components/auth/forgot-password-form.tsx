@@ -12,10 +12,12 @@ import { cn } from '@/lib/utils/index';
 
 import { FormField, FormInput, FormError } from '@/components/ui/form-field';
 import { Button } from '@/components/ui/button';
+import { useLocale } from '@/providers/locale-provider';
 
 // ─── Sent confirmation state ──────────────────────────────────────────────────
 
 function SentState({ email }: { email: string }) {
+  const { t } = useLocale();
   return (
     <div className="space-y-6 text-center">
       {/* Icon */}
@@ -27,9 +29,9 @@ function SentState({ email }: { email: string }) {
 
       {/* Copy */}
       <div className="space-y-2">
-        <h3 className="text-lg font-semibold text-foreground">Check your inbox</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t("forms.checkInbox")}</h3>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          If{' '}
+          {t("forms.ifEmailExists")}{' '}
           <span className="font-medium text-foreground">{email}</span>{' '}
           is linked to a Soundwave account, you&apos;ll receive a password reset link within a few minutes.
         </p>
@@ -37,11 +39,11 @@ function SentState({ email }: { email: string }) {
 
       {/* Hints */}
       <div className="rounded-md border border-border bg-secondary/50 px-4 py-3 text-left space-y-1.5">
-        <p className="text-xs font-medium text-foreground">Didn&apos;t receive it?</p>
+        <p className="text-xs font-medium text-foreground">{t("forms.didntReceive")}</p>
         <ul className="space-y-1 text-xs text-muted-foreground list-disc list-inside">
-          <li>Check your spam or junk folder</li>
-          <li>Make sure the email address is correct</li>
-          <li>Wait a few minutes and try again</li>
+          <li>{t("forms.checkSpam")}</li>
+          <li>{t("forms.confirmEmail")}</li>
+          <li>{t("forms.waitAndRetry")}</li>
         </ul>
       </div>
 
@@ -50,7 +52,7 @@ function SentState({ email }: { email: string }) {
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5" aria-hidden />
-        Back to sign in
+        {t("forms.backToSignIn")}
       </Link>
     </div>
   );
@@ -59,6 +61,7 @@ function SentState({ email }: { email: string }) {
 // ─── ForgotPasswordForm ───────────────────────────────────────────────────────
 
 export function ForgotPasswordForm() {
+  const { t } = useLocale();
   const emailId = useId();
   const [sentTo, setSentTo] = useState<string | null>(null);
 
@@ -95,10 +98,10 @@ export function ForgotPasswordForm() {
       onSubmit={handleSubmit(onSubmit)}
       noValidate
       className="space-y-5"
-      aria-label="Reset password form"
+      aria-label={t("forms.forgotPassword")}
     >
       {/* Email */}
-      <FormField label="Email address" error={errors.email?.message} required id={emailId}>
+      <FormField label={t("forms.emailAddress")} error={errors.email?.message} required id={emailId}>
         <FormInput
           id={emailId}
           type="email"
@@ -122,7 +125,7 @@ export function ForgotPasswordForm() {
         loading={isSubmitting}
         disabled={isSubmitting}
       >
-        Send reset link
+        {t("forms.sendResetLink")}
       </Button>
 
       {/* Back link */}
