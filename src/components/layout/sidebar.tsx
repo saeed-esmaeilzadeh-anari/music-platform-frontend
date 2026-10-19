@@ -32,7 +32,8 @@ const ADMIN_NAV: NavItem[] = [
   { label: 'navigation.dashboard', href: ROUTES.ADMIN, icon: LayoutDashboard },
 ];
 
-function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {\n  const { t } = useLocale();
+function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
+  const { t } = useLocale();
   const pathname = usePathname();
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
   const Icon = item.icon;
