@@ -167,13 +167,13 @@ export function TopBar() {
               href={ROUTES.LOGIN}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              Sign in
+              {t("common.signIn")}
             </Link>
             <Link
               href={ROUTES.REGISTER}
               className="rounded-full bg-primary px-4 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90 transition-opacity"
             >
-              Sign up
+              {t("common.signUp")}
             </Link>
           </div>
         )}
