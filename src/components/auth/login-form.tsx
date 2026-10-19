@@ -16,8 +16,9 @@ import { PasswordInput } from '@/components/ui/password-input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ApiErrorAlert } from '@/components/ui/api-error-alert';
+import { useLocale } from '@/providers/locale-provider';
 
-export function LoginForm() {
+export function LoginForm() {\n  const { t } = useLocale();
   const emailId = useId();
   const passwordId = useId();
   const rememberMeId = useId();
@@ -49,7 +50,7 @@ export function LoginForm() {
       onSubmit={handleSubmit(onSubmit)}
       noValidate
       className="space-y-5"
-      aria-label="Sign in form"
+      aria-label={t("forms.signIn")}
     >
       {/* API-level error — shown above the fields */}
       {apiError && (
@@ -58,7 +59,7 @@ export function LoginForm() {
 
       {/* Email */}
       <FormField
-        label="Email"
+        label={t("forms.email")}
         error={errors.email?.message}
         required
         id={emailId}
@@ -79,7 +80,7 @@ export function LoginForm() {
 
       {/* Password */}
       <FormField
-        label="Password"
+        label={t("forms.password")}
         error={errors.password?.message}
         required
         id={passwordId}
@@ -98,14 +99,14 @@ export function LoginForm() {
       <div className="flex items-center justify-between">
         <Checkbox
           id={rememberMeId}
-          label="Remember me"
+          label={t("forms.rememberMe")}
           defaultChecked
         />
         <Link
           href="/forgot-password"
           className="text-xs text-muted-foreground hover:text-primary transition-colors underline-offset-4 hover:underline"
         >
-          Forgot password?
+          {t("forms.forgotPassword")}
         </Link>
       </div>
 
@@ -118,7 +119,7 @@ export function LoginForm() {
         loading={isSubmitting || loginMutation.isPending}
         disabled={isSubmitting || loginMutation.isPending}
       >
-        Sign in
+        {t("forms.signIn")}
       </Button>
 
       {/* Demo credentials hint — useful during development */}
