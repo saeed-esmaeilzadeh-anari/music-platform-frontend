@@ -4,35 +4,36 @@ import { AuthFormShell } from '@/components/auth/auth-form-shell';
 import { RegisterForm } from '@/components/auth/register-form';
 import { RedirectIfAuthenticated } from '@/components/auth/redirect-if-authenticated';
 import { ROUTES } from '@/lib/constants';
+import { cookies } from 'next/headers';
+import { messages, type Locale } from '@/lib/i18n/messages';
 
-export const metadata: Metadata = {
-  title: 'Create account',
-  description: 'Create your Soundwave account and start listening.',
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const cookieStore = await cookies();
+  const isEnglish = cookieStore.get('NEXT_LOCALE')?.value === 'en';
+  return { title: isEnglish ? 'Create account' : 'ایجاد حساب', description: isEnglish ? 'Create your Soundwave account and start listening.' : 'حساب ساندوِیو خود را بسازید و موسیقی گوش کنید.' };
+}
 
-export default function RegisterPage() {
+export default async function RegisterPage() {
+  const cookieStore = await cookies();
+  const locale: Locale = cookieStore.get('NEXT_LOCALE')?.value === 'en' ? 'en' : 'fa';
+  const copy = messages[locale].auth;
   return (
     <main className="flex min-h-svh bg-background">
       <RedirectIfAuthenticated />
 
       {/* Left panel — distinct copy from login */}
       <AuthWavePanel
-        heading="Join the sound."
-        subheading="Create your account and unlock millions of tracks, artist tools, and personalised playlists."
-        features={[
-          'Free tier available — no card required',
-          'Publish your own tracks as an artist',
-          'Discover music tailored to your taste',
-          'Cross-device sync and offline listening',
-        ]}
+        heading={copy.joinHeading}
+        subheading={copy.joinSubtitle}
+        features={locale === 'fa' ? ['طرح رایگان بدون نیاز به کارت بانکی', 'انتشار آهنگ‌های خود به‌عنوان هنرمند', 'کشف موسیقی متناسب با سلیقه شما', 'همگام‌سازی دستگاه‌ها و گوش دادن آفلاین'] : ['Free tier available — no card required', 'Publish your own tracks as an artist', 'Discover music tailored to your taste', 'Cross-device sync and offline listening']}
       />
 
       {/* Right form panel */}
       <AuthFormShell
-        title="Create your account"
-        description="Fill in the details below to get started."
-        footerPrompt="Already have an account?"
-        footerLinkLabel="Sign in"
+        title={copy.registerTitle}
+        description={copy.registerDescription}
+        footerPrompt={copy.alreadyAccount}
+        footerLinkLabel={copy.signInTitle}
         footerLinkHref={ROUTES.LOGIN}
       >
         <RegisterForm />

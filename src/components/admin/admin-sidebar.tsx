@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/providers/locale-provider';
 
 interface NavItem {
   href: string;
@@ -44,6 +45,7 @@ const NAV_SECTIONS: { title: string; items: NavItem[] }[] = [
 ];
 
 function BrandMark() {
+  const { t } = useLocale();
   return (
     <Link href={ROUTES.ADMIN} className="group flex items-center gap-2.5" aria-label="داشبورد Soundwave">
       <span className="flex h-8 items-end gap-[3px]" aria-hidden>
@@ -57,7 +59,7 @@ function BrandMark() {
       </span>
       <span className="flex flex-col leading-tight">
         <span className="text-sm font-bold tracking-tight text-foreground">Soundwave</span>
-        <span className="text-[11px] text-muted-foreground">پنل مدیریت</span>
+        <span className="text-[11px] text-muted-foreground">{t('admin.adminPanel')}</span>
       </span>
     </Link>
   );
@@ -70,6 +72,7 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { locale, t } = useLocale();
 
   const content = (
     <>
@@ -80,19 +83,19 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
           type="button"
           onClick={onClose}
           className="rounded-md p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground lg:hidden"
-          aria-label="بستن منو"
+          aria-label={t("admin.menuClose")}
         >
           <X className="h-[18px] w-[18px]" />
         </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="ناوبری مدیریت">
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label={t("admin.adminPanel")}>
         {NAV_SECTIONS.map((section) => (
-          <div key={section.title} className="mb-4 last:mb-0">
+          <div key={locale === 'fa' ? section.title : ({ 'کلی': 'General', 'مدیریت جامعه': 'Community management', 'مدیریت محتوا': 'Content management' } as Record<string, string>)[section.title] ?? section.title} className="mb-4 last:mb-0">
             {/* Section heading — matches Velzon's sidebar group labels */}
             <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">
-              {section.title}
+              {locale === 'fa' ? section.title : ({ 'کلی': 'General', 'مدیریت جامعه': 'Community management', 'مدیریت محتوا': 'Content management' } as Record<string, string>)[section.title] ?? section.title}
             </p>
             <ul className="space-y-0.5" role="list">
               {section.items.map((item) => {
@@ -123,7 +126,7 @@ export function AdminSidebar({ mobileOpen, onClose }: AdminSidebarProps) {
                           active ? 'text-primary' : 'text-muted-foreground/70',
                         )}
                       />
-                      {item.label}
+                      {locale === 'fa' ? item.label : ({ 'داشبورد': 'Dashboard', 'کاربران': 'Users', 'هنرمندان': 'Artists', 'آلبوم‌ها': 'Albums', 'آهنگ‌ها': 'Tracks', 'ژانرها': 'Genres' } as Record<string, string>)[item.label] ?? item.label}
                     </Link>
                   </li>
                 );
