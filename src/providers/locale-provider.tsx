@@ -23,7 +23,7 @@ function getMessage(locale: Locale, key: string): string {
 
 export function LocaleProvider({ children, initialLocale = 'fa' }: { children: React.ReactNode; initialLocale?: Locale }) {
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
-  const dir = locale === 'fa' ? 'rtl' : 'ltr';
+  const dir: 'rtl' | 'ltr' = locale === 'fa' ? 'rtl' : 'ltr';
 
   useEffect(() => {
     document.documentElement.lang = locale;
