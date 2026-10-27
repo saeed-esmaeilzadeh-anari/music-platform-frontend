@@ -25,10 +25,17 @@ jobs:
           node-version: 22
           cache: npm
       - name: Install dependencies
+        id: install
         run: npm ci
       - name: Type-check
+        id: typecheck
         run: npm run type-check
       - name: Lint
+        id: lint
         run: npm run lint
+      # Still run the production build when lint finds pre-existing issues,
+      # provided dependency installation and TypeScript checking succeeded.
       - name: Production build
+        id: build
+        if: ${{ always() && steps.install.outcome == 'success' && steps.typecheck.outcome == 'success' }}
         run: npm run build
