@@ -1,0 +1,53 @@
+name: Artist onboarding frontend checks
+
+on:
+  push:
+    branches:
+      - feature/artist-onboarding-upload-flow
+  pull_request:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Type-check, scoped lint, and production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        id: install
+        run: npm ci
+      - name: Type-check
+        id: typecheck
+        run: npm run type-check
+      - name: Lint changed artist onboarding surfaces
+        id: scoped-lint
+        run: >
+          npx eslint
+          "src/components/artist/artist-profile-panel.tsx"
+          "src/hooks/use-artist-profile.ts"
+          "src/hooks/use-artists.ts"
+          "src/services/artists.service.ts"
+          "src/lib/constants/query-keys.ts"
+          "src/lib/i18n/messages.ts"
+          "src/app/(app)/profile/profile-client.tsx"
+          "src/app/(app)/upload/upload-client.tsx"
+          "src/components/upload/upload-track-form.tsx"
+      - name: Report existing repository-wide lint debt
+        id: full-lint
+        continue-on-error: true
+        run: npm run lint
+      - name: Production build
+        id: build
+        if: ${{ always() && steps.install.outcome == 'success' && steps.typecheck.outcome == 'success' && steps.scoped-lint.outcome == 'success' }}
+        run: npm run build
