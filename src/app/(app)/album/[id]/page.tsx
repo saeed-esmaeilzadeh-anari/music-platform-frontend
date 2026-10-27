@@ -3,6 +3,11 @@ import { AlbumClient } from './album-client';
 
 export const metadata: Metadata = { title: 'Album' };
 
-export default function AlbumPage({ params }: { params: { id: string } }) {
-  return <AlbumClient id={params.id} />;
+export default async function AlbumPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  return <AlbumClient id={id} />;
 }
