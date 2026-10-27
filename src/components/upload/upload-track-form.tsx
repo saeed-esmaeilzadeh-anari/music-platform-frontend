@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, type FormEvent } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Music2, CheckCircle2, ExternalLink } from 'lucide-react';
@@ -146,10 +146,15 @@ export function UploadTrackForm() {
     setDone(true);
   };
 
+  const onFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    // Invoke React Hook Form's ref-backed handler at event time, not during render.
+    void handleSubmit(onSubmit)(event);
+  };
+
   const onAudioErr  = useCallback((e: { message: string }) => toast('Invalid file', e.message), [toast]);
   const onCoverErr  = useCallback((e: { message: string }) => toast('Invalid file', e.message), [toast]);
-  const onAudioFile = useCallback((f: File[]) => setAudioFile(f[0]), []);
-  const onCoverFile = useCallback((f: File[]) => setCoverFile(f[0]), []);
+  const onAudioFile = useCallback((f: File[]) => setAudioFile(f[0]), [setAudioFile]);
+  const onCoverFile = useCallback((f: File[]) => setCoverFile(f[0]), [setCoverFile]);
 
   const resetForm = useCallback(() => {
     setAudioFile(null);
@@ -196,7 +201,7 @@ export function UploadTrackForm() {
   // ── Form ──────────────────────────────────────────────────────────────────
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
+    <form onSubmit={onFormSubmit} noValidate className="space-y-6">
 
       {/* Step 1: Track metadata */}
       <section className="rounded-xl border border-border bg-card p-6 space-y-5">
