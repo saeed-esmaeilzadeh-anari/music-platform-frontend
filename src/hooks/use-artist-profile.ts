@@ -1,33 +1,29 @@
 'use client';
 
-import { useMemo } from 'react';
-import { useArtists } from '@/hooks/use-artists';
+import { useQuery } from '@tanstack/react-query';
+import { artistsService } from '@/services/artists.service';
 import { useCurrentUser } from '@/hooks/use-auth';
+import { queryKeys, STALE_TIME } from '@/lib/constants';
 import type { ArtistResponse } from '@/types';
 
-/**
- * useArtistProfile
- *
- * Returns the artist profile belonging to the currently-authenticated user.
- * The backend has no GET /artists/me endpoint, so we fetch the artist list
- * and match by userId. This works because the list is short for artist accounts
- * (they own exactly one profile) and is cached at the STANDARD stale time.
- *
- * Returns null when the user has no artist profile (LISTENER role).
- */
 export function useArtistProfile(): {
   artist: ArtistResponse | null;
   isLoading: boolean;
+  isError: boolean;
+  refetch: () => Promise<unknown>;
 } {
   const user = useCurrentUser();
-  // Fetch with a large limit — in practice an artist owns exactly one profile,
-  // but we search the list since there's no /artists/me endpoint.
-  const { data, isLoading } = useArtists({ limit: 100 });
+  const query = useQuery({
+    queryKey: queryKeys.artists.mine(),
+    queryFn: () => artistsService.findMine(),
+    enabled: !!user?.id,
+    staleTime: STALE_TIME.INSTANT,
+  });
 
-  const artist = useMemo(() => {
-    if (!user || !data?.items) return null;
-    return data.items.find((a) => a.userId === user.id) ?? null;
-  }, [user, data?.items]);
-
-  return { artist, isLoading };
+  return {
+    artist: query.data ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
 }
