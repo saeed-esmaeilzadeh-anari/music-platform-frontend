@@ -20,6 +20,7 @@ export const queryKeys = {
   // ---- ARTISTS ----
   artists: {
     all: (params?: object) => ["artists", params] as const,
+    mine: () => ["artists", "me"] as const,
     detail: (id: string) => ["artists", id] as const,
   },
 

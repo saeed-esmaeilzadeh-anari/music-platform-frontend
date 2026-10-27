@@ -1,14 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Music2, Disc3, ImageIcon, Info, Shield, Lock } from 'lucide-react';
-import Link from 'next/link';
+import { Music2, Disc3, ImageIcon, Info, Shield } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { UploadTrackForm } from '@/components/upload/upload-track-form';
 import { UploadAlbumForm } from '@/components/upload/upload-album-form';
 import { UploadCoverForm } from '@/components/upload/upload-cover-form';
+import { ArtistProfilePanel } from '@/components/artist/artist-profile-panel';
+import { useArtistProfile } from '@/hooks/use-artist-profile';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/lib/constants';
 
 type Tab = 'track' | 'album' | 'cover';
 
@@ -83,33 +83,15 @@ function TipsSidebar({ tab }: { tab: Tab }) {
 }
 
 function AccessGuard() {
-  const { user } = useAuthStore();
-  return (
-    <div className="flex flex-col items-center gap-5 rounded-xl border border-border bg-card p-12 text-center max-w-md mx-auto">
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary border border-border">
-        <Lock className="h-7 w-7 text-muted-foreground/40" />
-      </div>
-      <div>
-        <p className="text-lg font-bold">Artist access required</p>
-        <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-          Uploading music requires an Artist account.
-          {user?.role === 'LISTENER' && (
-            <> Create an artist profile from your profile page to unlock uploads.</>
-          )}
-        </p>
-      </div>
-      <Link href={ROUTES.PROFILE}
-        className="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
-        Go to profile
-      </Link>
-    </div>
-  );
+  return <ArtistProfilePanel variant="upload" />;
 }
 
 export function UploadClient() {
   const [tab, setTab]  = useState<Tab>('track');
-  const { user }       = useAuthStore();
-  const canUpload      = user?.role === 'ARTIST' || user?.role === 'ADMIN';
+  const { user } = useAuthStore();
+  const { artist, isLoading: isArtistLoading, isError: isArtistError } = useArtistProfile();
+  const hasArtistRole = user?.role === 'ARTIST' || user?.role === 'ADMIN';
+  const canUpload = hasArtistRole && !!artist && !isArtistLoading && !isArtistError;
 
   return (
     <div className="px-4 py-8 lg:px-8 max-w-[1200px]">

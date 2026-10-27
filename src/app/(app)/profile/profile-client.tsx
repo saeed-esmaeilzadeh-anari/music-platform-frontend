@@ -10,6 +10,7 @@ import { updateProfileSchema, type UpdateProfileFormValues } from '@/lib/validat
 import { getInitials, formatDate, formatRelativeTime, cn } from '@/lib/utils/index';
 import { ROUTES, ROLE_LABELS } from '@/lib/constants';
 import { TrackRow } from '@/components/track/track-card';
+import { ArtistProfilePanel } from '@/components/artist/artist-profile-panel';
 import { TrackRowSkeleton } from '@/components/shared/skeleton';
 import { EmptyState } from '@/components/shared/empty-state';
 import Link from 'next/link';
@@ -189,6 +190,11 @@ export function ProfileClient() {
         <h2 className="text-base font-semibold mb-5">Edit profile</h2>
         <EditProfileForm />
       </section>
+
+      {/* Artist workspace: self-service onboarding and profile management */}
+      {(user?.role === 'LISTENER' || user?.role === 'ARTIST' || user?.role === 'ADMIN') && (
+        <ArtistProfilePanel variant="profile" />
+      )}
 
       {/* Recent history */}
       <section className="rounded-xl border border-border bg-card p-6">
