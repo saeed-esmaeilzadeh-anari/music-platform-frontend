@@ -2,8 +2,9 @@
  * Artists Service
  * Endpoints:
  *  GET   /artists           (public)
+ *  GET   /artists/me        (authenticated current user, nullable)
  *  GET   /artists/:id       (public)
- *  POST  /artists           (ARTIST, ADMIN)
+ *  POST  /artists           (LISTENER onboarding, ARTIST, ADMIN)
  *  PATCH /artists/:id       (ARTIST owner, ADMIN)
  */
 
@@ -21,6 +22,9 @@ export const artistsService = {
     query?: PaginationQuery
   ): Promise<PaginatedResult<ArtistResponse>> =>
     apiGet<PaginatedResult<ArtistResponse>>("/artists", { params: query }),
+
+  findMine: (): Promise<ArtistResponse | null> =>
+    apiGet<ArtistResponse | null>("/artists/me"),
 
   findById: (id: string): Promise<ArtistResponse> =>
     apiGet<ArtistResponse>(`/artists/${id}`),
