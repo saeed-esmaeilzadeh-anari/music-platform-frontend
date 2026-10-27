@@ -8,8 +8,8 @@ import Link from 'next/link';
 import { createTrackSchema, type CreateTrackFormValues } from '@/lib/validators';
 import { useCreateTrack } from '@/hooks/use-tracks';
 import { useFileUpload } from '@/hooks/use-file-upload';
-import { useArtists } from '@/hooks/use-artists';
-import { useAuthStore } from '@/stores/auth.store';
+import { useArtistProfile } from '@/hooks/use-artist-profile';
+import { ArtistProfilePanel } from '@/components/artist/artist-profile-panel';
 import { useGenres } from '@/hooks/use-catalog';
 import { useToast } from '@/providers/toast-provider';
 import { DropZone } from './drop-zone';
@@ -64,12 +64,14 @@ const inputCls = (err?: boolean, disabled?: boolean) => cn(
 // ─── Main form ────────────────────────────────────────────────────────────────
 
 export function UploadTrackForm() {
-  const { user }          = useAuthStore();
-  const { data: artists } = useArtists({ limit: 100 });
+  const {
+    artist,
+    isLoading: isArtistProfileLoading,
+    isError: isArtistProfileError,
+  } = useArtistProfile();
   const { data: genres }  = useGenres();
   const { error: toast }  = useToast();
 
-  const artist      = artists?.items.find((a) => a.userId === user?.id) ?? null;
   const createTrack = useCreateTrack(artist?.id ?? '');
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -161,19 +163,8 @@ export function UploadTrackForm() {
 
   // ── Guards ────────────────────────────────────────────────────────────────
 
-  if (user?.role === 'LISTENER') {
-    return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-border bg-card p-10 text-center">
-        <Music2 className="h-10 w-10 text-muted-foreground/30" />
-        <div>
-          <p className="font-semibold">Artist profile required</p>
-          <p className="mt-1 text-sm text-muted-foreground">Create an artist profile to upload tracks.</p>
-        </div>
-        <Link href={ROUTES.PROFILE} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity">
-          Go to profile
-        </Link>
-      </div>
-    );
+  if (isArtistProfileLoading || isArtistProfileError || !artist) {
+    return <ArtistProfilePanel variant="upload" />;
   }
 
   // ── Success ───────────────────────────────────────────────────────────────
