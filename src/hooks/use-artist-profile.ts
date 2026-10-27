@@ -3,7 +3,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { artistsService } from '@/services/artists.service';
 import { useCurrentUser } from '@/hooks/use-auth';
-import { queryKeys, STALE_TIME } from '@/lib/constants';
+import { STALE_TIME } from '@/lib/constants';
+import { queryKeys } from '@/lib/constants/query-keys';
 import type { ArtistResponse } from '@/types';
 
 export function useArtistProfile(): {
