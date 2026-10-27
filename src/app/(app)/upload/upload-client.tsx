@@ -7,6 +7,7 @@ import { UploadTrackForm } from '@/components/upload/upload-track-form';
 import { UploadAlbumForm } from '@/components/upload/upload-album-form';
 import { UploadCoverForm } from '@/components/upload/upload-cover-form';
 import { ArtistProfilePanel } from '@/components/artist/artist-profile-panel';
+import { useArtistProfile } from '@/hooks/use-artist-profile';
 import { cn } from '@/lib/utils';
 
 type Tab = 'track' | 'album' | 'cover';
@@ -87,8 +88,10 @@ function AccessGuard() {
 
 export function UploadClient() {
   const [tab, setTab]  = useState<Tab>('track');
-  const { user }       = useAuthStore();
-  const canUpload      = user?.role === 'ARTIST' || user?.role === 'ADMIN';
+  const { user } = useAuthStore();
+  const { artist, isLoading: isArtistLoading, isError: isArtistError } = useArtistProfile();
+  const hasArtistRole = user?.role === 'ARTIST' || user?.role === 'ADMIN';
+  const canUpload = hasArtistRole && !!artist && !isArtistLoading && !isArtistError;
 
   return (
     <div className="px-4 py-8 lg:px-8 max-w-[1200px]">
