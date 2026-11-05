@@ -1,6 +1,6 @@
 'use client';
 import { useState, useCallback } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Disc3, CheckCircle2, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
@@ -34,9 +34,9 @@ export function UploadAlbumForm() {
   const [albumId,   setAlbumId]   = useState<string | null>(null);
   const [done,      setDone]      = useState(false);
   const coverUpload = useFileUpload({ assetType: 'ALBUM_COVER', onDone: () => setDone(true) });
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } =
+  const { control, register, handleSubmit, setValue, formState: { errors, isSubmitting } } =
     useForm<CreateAlbumFormValues>({ resolver: zodResolver(createAlbumSchema), defaultValues: { title:'', type:'ALBUM', releaseDate:'', genreIds:[] } });
-  const selectedType = watch('type');
+  const selectedType = useWatch({ control, name: 'type' });
   const busy = isSubmitting || createAlbum.isPending || coverUpload.state.phase !== 'idle';
 
   const onSubmit = async (values: CreateAlbumFormValues) => {
