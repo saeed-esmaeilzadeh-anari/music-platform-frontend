@@ -275,7 +275,7 @@ function AccountSection() {
             Reset via email
           </a>
           <p className="mt-2 text-xs text-muted-foreground">
-            We'll send a secure link to your email address.
+            We&apos;ll send a secure link to your email address.
           </p>
         </FieldRow>
       </SectionCard>
