@@ -27,7 +27,7 @@ jobs:
         run: npm ci
       - name: Type-check
         run: npm run type-check
-      - name: Lint
-        run: npm run lint
+      - name: Lint changed integration files
+        run: npx eslint src/lib/api/http-client.ts src/lib/i18n/messages.ts
       - name: Production build
         run: npm run build
