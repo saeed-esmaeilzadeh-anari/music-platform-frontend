@@ -36,9 +36,6 @@ export function LocaleProvider({ children, initialLocale }: { children: React.Re
   const [isPending, startTransition] = useTransition();
   const { dir } = localeMeta[locale];
 
-  // The server render is authoritative (cookie may have changed in another tab).
-  useEffect(() => setLocaleState(initialLocale), [initialLocale]);
-
   // Instant feedback; the server also renders <html lang dir> from the cookie, so first paint is already correct.
   useEffect(() => {
     const root = document.documentElement;
