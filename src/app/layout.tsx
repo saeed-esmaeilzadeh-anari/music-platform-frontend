@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import "./globals.css";
 import { RootProviders } from "@/providers";
 import { LocaleProvider } from "@/providers/locale-provider";
-import type { Locale } from "@/lib/i18n/messages";
+import { localeMeta } from "@/lib/i18n/config";
+import { getServerLocale, getServerT } from "@/lib/i18n/server";
 import localFont from "next/font/local";
 
 const iransansweb = localFont({
@@ -19,19 +19,16 @@ const iransansweb = localFont({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
-  const cookieStore = await cookies();
-  const isEnglish = cookieStore.get("NEXT_LOCALE")?.value === "en";
+  const { t } = await getServerT();
   return {
-    title: { default: isEnglish ? "Soundwave | Music Platform" : "ساندوِیو | پلتفرم موسیقی", template: isEnglish ? "%s | Soundwave" : "%s | ساندوِیو" },
-    description: isEnglish ? "A music platform for listeners, artists, and content managers." : "پلتفرم موسیقی برای شنوندگان، هنرمندان و مدیران محتوا.",
+    title: { default: t("meta.site.title"), template: t("meta.site.titleTemplate") },
+    description: t("meta.site.description"),
   };
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const cookieStore = await cookies();
-  const cookieLocale = cookieStore.get("NEXT_LOCALE")?.value;
-  const locale: Locale = cookieLocale === "en" ? "en" : "fa";
-  const dir = locale === "fa" ? "rtl" : "ltr";
+  const locale = await getServerLocale();
+  const { dir } = localeMeta[locale];
 
   return (
     <html lang={locale} dir={dir} className={`${iransansweb.variable} dark font-iransansweb antialiased bg-background text-foreground`} suppressHydrationWarning>

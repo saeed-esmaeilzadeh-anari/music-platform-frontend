@@ -1,45 +1,96 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { messages, type Locale } from '@/lib/i18n/messages';
+import { Fragment, createContext, useCallback, useContext, useEffect, useMemo, useState, useTransition, type ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import { Direction } from 'radix-ui';
+import { i18nConfig, localeMeta, type Locale } from '@/lib/i18n/config';
+import { createFormatter, type Formatter } from '@/lib/i18n/format';
+import type { MessageKey } from '@/lib/i18n/messages';
+import { resolveTemplate, translate, translateEnum, translateMessage, type TranslationValues } from '@/lib/i18n/translate';
 
-type Dictionary = typeof messages.en;
+export type TFunction = (key: MessageKey, values?: TranslationValues) => string;
+/** Like TFunction, but placeholders may be React nodes (links, <strong>…) — keeps whole sentences translatable. */
+export type RichFunction = (key: MessageKey, values: Record<string, ReactNode>) => ReactNode;
+
 interface LocaleContextValue {
   locale: Locale;
   dir: 'rtl' | 'ltr';
+  isRtl: boolean;
+  /** True while the server is re-rendering after a language change. */
+  isPending: boolean;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: TFunction;
+  rich: RichFunction;
+  /** Translates text that may be a message key (e.g. zod messages) and leaves normal text untouched. */
+  tm: (text: string | undefined | null) => string;
+  /** Label for a backend enum value; unknown values are shown as-is, never as a key. */
+  tEnum: (group: string, value: string | null | undefined) => string;
+  format: Formatter;
 }
+
 const LocaleContext = createContext<LocaleContextValue | null>(null);
 
-function getMessage(locale: Locale, key: string): string {
-  return key.split('.').reduce<unknown>((value, part) => {
-    if (value && typeof value === 'object' && part in value) {
-      return (value as Record<string, unknown>)[part];
-    }
-    return undefined;
-  }, messages[locale]) as string || key;
-}
-
-export function LocaleProvider({ children, initialLocale = 'fa' }: { children: React.ReactNode; initialLocale?: Locale }) {
+export function LocaleProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale: Locale }) {
+  const router = useRouter();
   const [locale, setLocaleState] = useState<Locale>(initialLocale);
-  const dir: 'rtl' | 'ltr' = locale === 'fa' ? 'rtl' : 'ltr';
+  const [isPending, startTransition] = useTransition();
+  const { dir } = localeMeta[locale];
 
+  // The server render is authoritative (cookie may have changed in another tab).
+  useEffect(() => setLocaleState(initialLocale), [initialLocale]);
+
+  // Instant feedback; the server also renders <html lang dir> from the cookie, so first paint is already correct.
   useEffect(() => {
-    document.documentElement.lang = locale;
-    document.documentElement.dir = dir;
-    document.documentElement.dataset.locale = locale;
+    const root = document.documentElement;
+    root.lang = locale;
+    root.dir = dir;
+    root.dataset.locale = locale;
   }, [locale, dir]);
 
-  const setLocale = useCallback((nextLocale: Locale) => {
-    setLocaleState(nextLocale);
-    document.cookie = `NEXT_LOCALE=${nextLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
-  }, []);
+  const setLocale = useCallback(
+    (next: Locale) => {
+      if (next === locale) return;
+      const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+      document.cookie = `${i18nConfig.cookieName}=${next}; Path=/; Max-Age=${i18nConfig.cookieMaxAge}; SameSite=Lax${secure}`;
+      setLocaleState(next);
+      // Re-renders Server Components (metadata, server copy). Client state — auth, player, forms — is preserved.
+      startTransition(() => router.refresh());
+    },
+    [locale, router],
+  );
 
-  const t = useCallback((key: string) => getMessage(locale, key), [locale]);
-  const value = useMemo(() => ({ locale, dir, setLocale, t }), [locale, dir, setLocale, t]);
+  const value = useMemo<LocaleContextValue>(() => {
+    const intl = localeMeta[locale].intl;
+    return {
+      locale,
+      dir,
+      isRtl: dir === 'rtl',
+      isPending,
+      setLocale,
+      t: (key, values) => translate(locale, key, values),
+      rich: (key, values) => {
+        const count = typeof values.count === 'number' ? values.count : undefined;
+        return resolveTemplate(locale, key, count)
+          .split(/(\{\w+\})/g)
+          .map((part, index) => {
+            const name = /^\{(\w+)\}$/.exec(part)?.[1];
+            if (!name || !(name in values)) return part;
+            const v = values[name];
+            return <Fragment key={index}>{typeof v === 'number' ? new Intl.NumberFormat(intl).format(v) : v}</Fragment>;
+          });
+      },
+      tm: text => translateMessage(locale, text),
+      tEnum: (group, v) => translateEnum(locale, group, v),
+      format: createFormatter(locale),
+    };
+  }, [locale, dir, isPending, setLocale]);
 
-  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+  return (
+    <LocaleContext.Provider value={value}>
+      {/* Radix primitives (dialogs, menus, selects…) need this to place and navigate correctly in RTL. */}
+      <Direction.Provider dir={dir}>{children}</Direction.Provider>
+    </LocaleContext.Provider>
+  );
 }
 
 export function useLocale() {

@@ -13,23 +13,24 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useMyPlaylists } from '@/hooks/use-playlists';
 import { SidebarWordmark } from './sidebar-wordmark';
 import { useLocale } from '@/providers/locale-provider';
+import type { MessageKey } from '@/lib/i18n/messages';
 
-interface NavItem { label: string; href: string; icon: React.ElementType; roles?: string[] }
+interface NavItem { labelKey: MessageKey; href: string; icon: React.ElementType; roles?: string[] }
 
 const PRIMARY_NAV: NavItem[] = [
-  { label: 'navigation.home',    href: ROUTES.HOME,    icon: Home },
-  { label: 'navigation.search',  href: ROUTES.SEARCH,  icon: Search },
-  { label: 'navigation.library', href: ROUTES.LIBRARY, icon: Library },
+  { labelKey: 'navigation.home',    href: ROUTES.HOME,    icon: Home },
+  { labelKey: 'navigation.search',  href: ROUTES.SEARCH,  icon: Search },
+  { labelKey: 'navigation.library', href: ROUTES.LIBRARY, icon: Library },
 ];
 
 const PERSONAL_NAV: NavItem[] = [
-  { label: 'navigation.favourites', href: ROUTES.LIBRARY, icon: Heart },
-  { label: 'navigation.history',    href: ROUTES.HISTORY, icon: History },
-  { label: 'navigation.upload',     href: ROUTES.UPLOAD,  icon: Upload, roles: ['ARTIST', 'ADMIN'] },
+  { labelKey: 'navigation.favourites', href: ROUTES.LIBRARY, icon: Heart },
+  { labelKey: 'navigation.history',    href: ROUTES.HISTORY, icon: History },
+  { labelKey: 'navigation.upload',     href: ROUTES.UPLOAD,  icon: Upload, roles: ['ARTIST', 'ADMIN'] },
 ];
 
 const ADMIN_NAV: NavItem[] = [
-  { label: 'navigation.dashboard', href: ROUTES.ADMIN, icon: LayoutDashboard },
+  { labelKey: 'navigation.dashboard', href: ROUTES.ADMIN, icon: LayoutDashboard },
 ];
 
 function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
@@ -38,7 +39,7 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
   const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
   const Icon = item.icon;
   return (
-    <Link href={item.href} title={collapsed ? (item.label.includes(".") ? t(item.label) : item.label) : undefined}
+    <Link href={item.href} title={collapsed ? t(item.labelKey) : undefined}
       className={cn(
         'group flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-150 select-none',
         isActive ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground',
@@ -46,7 +47,7 @@ function NavLink({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
       )}>
       <Icon className={cn('shrink-0 transition-colors', collapsed ? 'h-5 w-5' : 'h-4 w-4',
         isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground')} aria-hidden />
-      {!collapsed && <span className="truncate">{item.label.includes(".") ? t(item.label) : item.label}</span>}
+      {!collapsed && <span className="truncate">{t(item.labelKey)}</span>}
       {isActive && !collapsed && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-primary shrink-0" aria-hidden />}
     </Link>
   );
