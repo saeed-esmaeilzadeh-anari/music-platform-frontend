@@ -22,7 +22,6 @@ function InlineTitle({ playlistId, title, isOwner }: { playlistId: string; title
   const update                = useUpdatePlaylist(playlistId);
 
   useEffect(() => { if (editing) inputRef.current?.select(); }, [editing]);
-  useEffect(() => { setDraft(title); }, [title]);
 
   const save = () => {
     const trimmed = draft.trim();
@@ -89,7 +88,7 @@ export function PlaylistHeader({ playlist, trackCount, totalDurationSec, isOwner
             </span>
           </div>
 
-          <InlineTitle playlistId={playlist.id} title={playlist.title} isOwner={isOwner} />
+          <InlineTitle key={playlist.title} playlistId={playlist.id} title={playlist.title} isOwner={isOwner} />
 
           {playlist.description && (
             <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 max-w-xl">

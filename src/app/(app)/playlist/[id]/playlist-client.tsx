@@ -82,12 +82,10 @@ export function PlaylistClient({ id }: PlaylistClientProps) {
   const [addTracksOpen, setAddTracksOpen] = useState(false);
 
   // Derive tracks from nested PlaylistTrack join rows
-  const playlistTracks = useMemo(() => {
-    if (!playlist?.tracks) return [];
-    return playlist.tracks
-      .filter((pt): pt is { track: TrackResponse; addedAt: string; position: number } => !!pt?.track)
-      .sort((a, b) => a.position - b.position);
-  }, [playlist]);
+  const playlistTracks = useMemo(
+    () => [...(playlist?.tracks ?? [])].sort((a, b) => a.position - b.position),
+    [playlist?.tracks],
+  );
 
   const tracks         = useMemo(() => playlistTracks.map(pt => pt.track), [playlistTracks]);
   const totalDuration  = useMemo(() => tracks.reduce((s, t) => s + t.durationSec, 0), [tracks]);

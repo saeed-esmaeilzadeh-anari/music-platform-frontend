@@ -4,9 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useReducer,
-  useState,
 } from "react";
 
 import * as ToastPrimitive from "@radix-ui/react-toast";
@@ -64,13 +62,7 @@ const VARIANT_STYLES: Record<ToastVariant, string> = {
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-
   const [toasts, dispatch] = useReducer(toastReducer, []);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const toast = useCallback((opts: Omit<Toast, "id">) => {
     const id = crypto.randomUUID();
@@ -129,8 +121,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
       <ToastPrimitive.Provider swipeDirection="right">
         {children}
 
-        {mounted &&
-          toasts.map((t) => (
+        {toasts.map((t) => (
             <ToastPrimitive.Root
               key={t.id}
               duration={t.duration ?? 4000}
@@ -166,17 +157,15 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             </ToastPrimitive.Root>
           ))}
 
-        {mounted && (
-          <ToastPrimitive.Viewport
-            className="
-              fixed bottom-24 right-4 z-50
-              flex flex-col gap-2
-              w-[380px]
-              max-w-[calc(100vw-2rem)]
-              outline-none
-            "
-          />
-        )}
+        <ToastPrimitive.Viewport
+          className="
+            fixed bottom-24 right-4 z-50
+            flex flex-col gap-2
+            w-[380px]
+            max-w-[calc(100vw-2rem)]
+            outline-none
+          "
+        />
       </ToastPrimitive.Provider>
     </ToastContext.Provider>
   );

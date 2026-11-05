@@ -318,6 +318,14 @@ export interface RegisterPlayDto {
 // PLAYLISTS  (mirrors: playlists/dto/*)
 // -----------------------------------------------------------
 
+export interface PlaylistTrackEntry {
+  id: string;
+  trackId: string;
+  position: number;
+  addedAt: string;
+  track: TrackResponse;
+}
+
 export interface PlaylistResponse {
   id: string;
   title: string;
@@ -326,6 +334,7 @@ export interface PlaylistResponse {
   visibility: PlaylistVisibility;
   ownerId: string;
   createdAt: string;
+  tracks?: PlaylistTrackEntry[];
 }
 
 export interface CreatePlaylistDto {

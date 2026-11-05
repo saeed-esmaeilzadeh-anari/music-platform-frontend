@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import {
   Bell, BellOff, Check, CheckCheck,
   UserPlus, Music2, ListMusic, MessageSquare,
@@ -299,9 +299,6 @@ export function NotificationsClient() {
 // ─── Simple useState wrapper for the tab ────────────────────────────────────
 
 function useFilterTab(): [FilterTab, (t: FilterTab) => void] {
-  const [tab, setTab] = (
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    require('react').useState as (v: FilterTab) => [FilterTab, (v: FilterTab) => void]
-  )('all');
+  const [tab, setTab] = useState<FilterTab>('all');
   return [tab, setTab];
 }

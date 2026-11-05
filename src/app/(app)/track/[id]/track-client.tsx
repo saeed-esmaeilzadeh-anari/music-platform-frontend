@@ -193,7 +193,7 @@ export function TrackClient({ id }: { id: string }) {
           <div
             key={i}
             className="w-0.5 rounded-full bg-waveform-inactive"
-            style={{ height: `${20 + Math.sin(i * 0.4) * 15 + Math.random() * 20}%` }}
+            style={{ height: `${20 + Math.sin(i * 0.4) * 15 + ((i * 17) % 20)}%` }}
           />
         ))}
       </div>

@@ -19,16 +19,30 @@ function useDebouncedTracks(query: string) {
   const debounced = useDebounce(query);
 
   useEffect(() => {
-    if (!debounced.trim()) { setTracks([]); return; }
+    if (!debounced.trim()) return;
+
     let cancelled = false;
-    setLoading(true);
-    tracksService.findAll({ search: debounced, status: 'PUBLISHED', limit: 20 })
-      .then(res => { if (!cancelled) setTracks(res.items); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      void tracksService.findAll({ search: debounced, status: 'PUBLISHED', limit: 20 })
+        .then((res) => {
+          if (!cancelled) setTracks(res.items);
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }, 0);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
   }, [debounced]);
 
-  return { tracks, loading };
+  return {
+    tracks: debounced.trim() ? tracks : [],
+    loading: Boolean(debounced.trim()) && loading,
+  };
 }
 
 interface Props { playlistId: string; existingTrackIds: Set<string>; onClose: () => void; }

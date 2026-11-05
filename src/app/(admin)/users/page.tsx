@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Search, MoreVertical, Ban, CheckCircle2, Trash2, BadgeCheck, MailWarning } from 'lucide-react';
 import { PageHeader } from '@/components/admin/page-header';
 import { Card } from '@/components/admin/card';
@@ -43,16 +43,13 @@ export default function AdminUsersPage() {
   const updateStatus = useUpdateUserStatus();
   const deleteUser = useDeleteUser();
 
-  const filteredItems = useMemo(() => {
-    if (!data?.items) return [];
-    return data.items.filter((u) => {
-      const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-      const q = search.trim().toLowerCase();
-      const matchesSearch =
-        !q || u.username.toLowerCase().includes(q) || u.email.toLowerCase().includes(q);
-      return matchesRole && matchesSearch;
-    });
-  }, [data?.items, roleFilter, search]);
+  const q = search.trim().toLowerCase();
+  const filteredItems = (data?.items ?? []).filter((user) => {
+    const matchesRole = roleFilter === 'ALL' || user.role === roleFilter;
+    const matchesSearch =
+      !q || user.username.toLowerCase().includes(q) || user.email.toLowerCase().includes(q);
+    return matchesRole && matchesSearch;
+  });
 
   return (
     <div>

@@ -25,12 +25,15 @@ export function AdminGuard({ children }: { children: React.ReactNode }) {
   const [hasToken, setHasToken] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const token = getAccessToken();
-    if (!token) {
-      router.replace(ROUTES.LOGIN);
-      return;
-    }
-    setHasToken(true);
+    const timer = window.setTimeout(() => {
+      if (!getAccessToken()) {
+        router.replace(ROUTES.LOGIN);
+        return;
+      }
+      setHasToken(true);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [router]);
 
   // Still checking for a token on mount
