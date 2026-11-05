@@ -25,7 +25,7 @@ interface AuthProviderProps {
  * separately by ProtectedRoute / AdminRoute guards.
  */
 export function AuthProvider({ children }: AuthProviderProps) {
-  const { setUser, isAuthenticated } = useAuthStore();
+  const { setUser } = useAuthStore();
 
   const hasToken = typeof window !== "undefined" && !!getAccessToken();
 
