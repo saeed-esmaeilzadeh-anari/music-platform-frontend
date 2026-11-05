@@ -12,7 +12,7 @@ import type {
   PaginatedResult,
   PaginationQuery,
   PlaylistResponse,
-  TrackResponse,
+  PlaylistTrackEntry,
   UpdatePlaylistDto,
 } from '@/types';
 
@@ -256,15 +256,7 @@ export function useReorderPlaylistTrack(playlistId: string) {
   });
 }
 
-// ─── Local type for the detail response that includes tracks ──────────────────
-// The backend returns PlaylistTrack rows nested under GET /playlists/:id
-// We type-assert using this extended shape.
-export interface PlaylistTrackEntry {
-  track: TrackResponse;
-  addedAt: string;
-  position: number;
-}
-
-export interface PlaylistWithTracks extends PlaylistResponse {
-  tracks?: PlaylistTrackEntry[];
-}
+// GET /playlists/:id returns the shared PlaylistResponse contract,
+// including ordered join rows with nested TrackResponse objects.
+export type { PlaylistTrackEntry } from '@/types';
+export type PlaylistWithTracks = PlaylistResponse;
