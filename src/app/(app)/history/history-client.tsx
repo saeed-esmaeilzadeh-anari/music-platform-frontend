@@ -395,7 +395,7 @@ function FullHistorySection() {
             <div>
               <p className="font-semibold">No listening history yet</p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Start playing tracks and they'll appear here.
+                Start playing tracks and they&apos;ll appear here.
               </p>
             </div>
           </div>
