@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Soundwave — Music Streaming Platform
 
-## Getting Started
+A bilingual music streaming web application for listeners, artists, moderators, and administrators. The API is maintained in [music-streaming-api_nest](https://github.com/saeed-esmaeilzadeh-anari/music-streaming-api_nest).
 
-First, run the development server:
+## Technology
+
+- Next.js App Router, React, TypeScript
+- Tailwind CSS and shadcn/ui components
+- TanStack Query for server state
+- Zustand for client and player state
+- Axios API client
+- React Hook Form and Zod
+- Local IRANSans font assets and English system typography
+
+## Application areas
+
+- Registration, login, protected routes, and token refresh
+- Music discovery, track, artist, album, and playlist pages
+- Global HTML5 audio player and queue
+- Artist profile onboarding and music upload flow
+- Favorites, playlists, listening history, comments, and notifications
+- Subscription and payment screens
+- Admin dashboard for catalog and account management
+- Persian/English translations with RTL/LTR layout support
+
+The feature list describes the application surfaces in the repository. Live behavior depends on the API and external services configured for the environment.
+
+## Requirements and setup
+
+- Node.js 22+
+- npm
+- A running NestJS API and its required PostgreSQL, Redis, and storage services
+
+```bash
+npm ci
+```
+
+Copy `.env.example` to `.env.local` and set the API URL.
+
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env.local
+```
+
+Example:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Commands
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev
+npm run type-check
+npm run lint
+npm run build
+npm run start
+```
 
-## Learn More
+## Routes
 
-To learn more about Next.js, take a look at the following resources:
+The application uses Next.js route groups:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `(auth)`: login, registration, password recovery, logout
+- `(app)`: home, search, artist, album, track, playlist, library, upload, profile, settings, history, notifications, subscription
+- `(admin)`: dashboard and catalog/account administration
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Route groups do not appear in public URLs. Access control must also be enforced by the API.
 
-## Deploy on Vercel
+## Localization
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Persian (`fa`) is the default language and uses RTL layout. English (`en`) uses LTR layout. Translation dictionaries are stored in `src/lib/i18n/messages/`; keep both JSON dictionaries structurally identical. Locale preference is persisted with the `NEXT_LOCALE` cookie.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API and media
+
+Set `NEXT_PUBLIC_API_URL` to the public API base URL, including the API prefix (for example, `/api/v1`). Audio and image delivery depends on the backend's configured object storage.
+
+A successful frontend build does not prove that PostgreSQL, Redis, Stripe, email, or object-storage credentials are configured, nor that live playback works. Verify the full upload-to-playback flow in the deployed environment.
+
+## Deployment
+
+Deploy the frontend independently from the API. Configure `NEXT_PUBLIC_API_URL` in the deployment environment and use HTTPS for both services in production. Add remote image hosts to `next.config.ts` when changing storage providers.
+
+## CI
+
+GitHub Actions runs dependency installation, TypeScript checking, lint, and a production build on pushes to the finalization branch and pull requests targeting `master`.

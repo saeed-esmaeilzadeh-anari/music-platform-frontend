@@ -15,7 +15,7 @@ import axios, {
 } from "axios";
 import type { ApiSuccessResponse } from "@/types";
 
-const BASE_URL =process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3000/api/v1";
+const BASE_URL = (process.env.NEXT_PUBLIC_API_URL?.trim() || "http://localhost:3001/api/v1").replace(/\/+$/, "");
 
 // Token storage keys
 export const TOKEN_KEYS = {
@@ -98,11 +98,11 @@ httpClient.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
+    const originalRequest = error.config as (InternalAxiosRequestConfig & {
       _retry?: boolean;
-    };
+    }) | undefined;
 
-    if (error.response?.status !== 401 || originalRequest._retry) {
+    if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
       return Promise.reject(error);
     }
 
