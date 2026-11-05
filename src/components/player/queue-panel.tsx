@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { X, ListMusic, History, Trash2, GripVertical } from 'lucide-react';
+import { X, ListMusic, History, Trash2, GripVertical, type LucideIcon } from 'lucide-react';
 import { cn, formatDuration } from '@/lib/utils';
 import { usePlayerStore } from '@/stores/player.store';
 import type { TrackResponse } from '@/types';
@@ -84,6 +84,41 @@ function RecentRow({ track, onPlay }: { track: TrackResponse; onPlay: () => void
 
 type Tab = 'queue' | 'recent';
 
+function TabButton({
+  id,
+  label,
+  Icon,
+  selected,
+  queueCount,
+  onSelect,
+}: {
+  id: Tab;
+  label: string;
+  Icon: LucideIcon;
+  selected: boolean;
+  queueCount: number;
+  onSelect: (tab: Tab) => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect(id)}
+      className={cn(
+        'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
+        selected ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {label}
+      {id === 'queue' && queueCount > 0 && (
+        <span className="ml-0.5 rounded-full bg-primary/20 px-1.5 py-px text-[9px] font-bold text-primary">
+          {queueCount}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export function QueuePanel({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<Tab>('queue');
 
@@ -101,24 +136,13 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const TabBtn = ({ id, label, Icon }: { id: Tab; label: string; Icon: React.ElementType }) => (
-    <button type="button" onClick={() => setTab(id)}
-      className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors',
-        tab === id ? 'bg-secondary text-foreground' : 'text-muted-foreground hover:text-foreground')}>
-      <Icon className="h-3.5 w-3.5" />{label}
-      {id === 'queue' && queue.length > 0 && (
-        <span className="ml-0.5 rounded-full bg-primary/20 px-1.5 py-px text-[9px] font-bold text-primary">{queue.length}</span>
-      )}
-    </button>
-  );
-
   return (
     <aside className="flex w-72 shrink-0 flex-col border-l border-border bg-card" aria-label="Queue">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0">
         <div className="flex gap-1">
-          <TabBtn id="queue"  label="Queue"  Icon={ListMusic} />
-          <TabBtn id="recent" label="Recent" Icon={History} />
+          <TabButton id="queue" label="Queue" Icon={ListMusic} selected={tab === 'queue'} queueCount={queue.length} onSelect={setTab} />
+          <TabButton id="recent" label="Recent" Icon={History} selected={tab === 'recent'} queueCount={queue.length} onSelect={setTab} />
         </div>
         <button type="button" onClick={onClose} aria-label="Close queue"
           className="text-muted-foreground hover:text-foreground transition-colors">
