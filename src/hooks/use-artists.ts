@@ -81,3 +81,4 @@ export function useUpdateArtist(id: string) {
     onError: (err) => error('ویرایش پروفایل ناموفق بود', extractApiError(err)),
   });
 }
+ 
