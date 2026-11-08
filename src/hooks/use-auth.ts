@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
@@ -103,4 +103,27 @@ export function useIsAuthenticated() {
 
 export function useHasRole() {
   return useAuthStore((s) => s.hasRole);
+}
+
+/** Server-backed active sessions; no token material is returned by the API. */
+export function useActiveSessions() {
+  return useQuery({
+    queryKey: ['auth', 'sessions'],
+    queryFn: () => authService.listSessions(),
+    staleTime: 30_000,
+  });
+}
+
+export function useRevokeSession() {
+  const qc = useQueryClient();
+  const { success, error } = useToast();
+
+  return useMutation({
+    mutationFn: (sessionId: string) => authService.revokeSession(sessionId),
+    onSuccess: async () => {
+      await qc.invalidateQueries({ queryKey: ['auth', 'sessions'] });
+      success('Session revoked');
+    },
+    onError: (err) => error('Could not revoke session', extractApiError(err)),
+  });
 }
