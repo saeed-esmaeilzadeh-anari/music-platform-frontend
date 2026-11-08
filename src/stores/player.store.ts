@@ -253,7 +253,16 @@ export const usePlayerStore = create<PlayerState>()(
           }, false, 'player/moveQueueItem');
         },
 
-        clearQueue: () => set({ queue: [], queueIndex: -1, currentTrack: null, isPlaying: false }, false, 'player/clearQueue'),
+        clearQueue: () => set({
+          queue: [],
+          queueIndex: -1,
+          currentTrack: null,
+          isPlaying: false,
+          isLoading: false,
+          progressSec: 0,
+          durationSec: 0,
+          shuffledIndices: [],
+        }, false, 'player/clearQueue'),
 
         addToRecentlyPlayed: (track) => {
           const filtered = get().recentlyPlayed.filter(t => t.id !== track.id);
