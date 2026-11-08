@@ -58,6 +58,23 @@ export const queryKeys = {
     all: (params?: object) => ["favorites", params] as const,
   },
 
+  // ---- PREFERENCES ----
+  preferences: {
+    user: () => ["preferences", "user"] as const,
+    notifications: () => ["preferences", "notifications"] as const,
+  },
+
+  // ---- RECOMMENDATIONS ----
+  recommendations: {
+    all: (limit?: number) => ["recommendations", limit ?? "default"] as const,
+  },
+
+  // ---- FOLLOWS ----
+  follows: {
+    following: (params?: object) => ["follows", "following", params] as const,
+    isFollowing: (artistId: string) => ["follows", "isFollowing", artistId] as const,
+  },
+
   // ---- LISTENING HISTORY ----
   history: {
     all: (params?: object) => ["history", params] as const,

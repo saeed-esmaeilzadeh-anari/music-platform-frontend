@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import { useSearch } from '@/hooks/use-catalog';
@@ -67,11 +67,29 @@ export function SearchClient() {
     inputRef.current?.focus();
   };
 
-  const trackItems: TrackResponse[] = (results?.tracks ?? []).map(t => ({
-    id: t.id, title: t.title, durationSec: 0, status: 'PUBLISHED',
-    isExplicit: false, playCount: '0', albumId: null, coverUrl: null, audioUrl: null,
-    createdAt: '', artist: { id: '', stageName: t.artistName },
-  }));
+  /**
+   * Map API results onto full TrackResponse objects. The search endpoint
+   * returns playable fields (audioUrl, coverUrl, durationSec, artistId);
+   * previously these were hardcoded to null/0 which made every result
+   * unplayable — the row rendered but pressing play did nothing.
+   */
+  const trackItems: TrackResponse[] = useMemo(
+    () =>
+      (results?.tracks ?? []).map(t => ({
+        id: t.id,
+        title: t.title,
+        durationSec: t.durationSec ?? 0,
+        status: 'PUBLISHED' as const,
+        isExplicit: t.isExplicit ?? false,
+        playCount: '0',
+        albumId: t.albumId ?? null,
+        coverUrl: t.coverUrl ?? null,
+        audioUrl: t.audioUrl ?? null,
+        createdAt: '',
+        artist: { id: t.artistId ?? '', stageName: t.artistName },
+      })),
+    [results?.tracks],
+  );
 
   return (
     <div className="px-4 py-6 lg:px-8 max-w-[1400px]">
@@ -177,7 +195,7 @@ function ResultsGrid({ results, type, trackItems, onPlay }: {
           {type === 'ALL' && <h3 className="text-lg font-bold mb-4">Albums</h3>}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
             {results.albums.map(a => (
-              <AlbumCard key={a.id} album={{ id: a.id, title: a.title, type: 'ALBUM', coverUrl: null, releaseDate: null, artistId: '', isPublished: true, createdAt: '' }} artistName={a.artistName} />
+              <AlbumCard key={a.id} album={{ id: a.id, title: a.title, type: 'ALBUM', coverUrl: a.coverUrl ?? null, releaseDate: null, artistId: a.artistId ?? '', isPublished: true, createdAt: '' }} artistName={a.artistName} />
             ))}
           </div>
         </section>
@@ -188,7 +206,7 @@ function ResultsGrid({ results, type, trackItems, onPlay }: {
           {type === 'ALL' && <h3 className="text-lg font-bold mb-4">Artists</h3>}
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-4">
             {results.artists.map(a => (
-              <ArtistCard key={a.id} artist={{ id: a.id, userId: '', stageName: a.stageName, bio: null, bannerUrl: null, isVerified: false, monthlyListeners: 0, createdAt: '' }} />
+              <ArtistCard key={a.id} artist={{ id: a.id, userId: '', stageName: a.stageName, bio: null, bannerUrl: a.imageUrl ?? null, isVerified: a.isVerified ?? false, monthlyListeners: a.monthlyListeners ?? 0, createdAt: '' }} />
             ))}
           </div>
         </section>
@@ -199,7 +217,7 @@ function ResultsGrid({ results, type, trackItems, onPlay }: {
           {type === 'ALL' && <h3 className="text-lg font-bold mb-4">Playlists</h3>}
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {results.playlists.map(p => (
-              <PlaylistCard key={p.id} playlist={{ id: p.id, title: p.title, description: null, coverUrl: null, visibility: 'PUBLIC', ownerId: '', createdAt: '' }} />
+              <PlaylistCard key={p.id} playlist={{ id: p.id, title: p.title, description: null, coverUrl: p.coverUrl ?? null, visibility: 'PUBLIC', ownerId: '', createdAt: '' }} />
             ))}
           </div>
         </section>

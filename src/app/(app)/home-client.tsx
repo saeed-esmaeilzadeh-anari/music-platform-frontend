@@ -5,6 +5,7 @@ import { useTracks } from '@/hooks/use-tracks';
 import { useAlbums } from '@/hooks/use-albums';
 import { useArtists } from '@/hooks/use-artists';
 import { useMyPlaylists } from '@/hooks/use-playlists';
+import { RecommendationSections } from '@/components/home/recommendation-sections';
 import { SectionHeader } from '@/components/shared/section-header';
 import { TrackCard } from '@/components/track/track-card';
 import { AlbumCard } from '@/components/album/album-card';
@@ -37,8 +38,6 @@ function CardGrid({ children }: { children: React.ReactNode }) {
 }
 
 export function HomeClient() {
-
-  console.log("HomeClient");
   const { data: tracks,   isLoading: tracksLoading  } = useTracks({ limit: 6, status: 'PUBLISHED' });
   const { data: albums,   isLoading: albumsLoading  } = useAlbums({ limit: 6 });
   const { data: artists,  isLoading: artistsLoading } = useArtists({ limit: 6 });
@@ -47,6 +46,9 @@ export function HomeClient() {
   return (
     <div className="px-4 py-6 lg:px-8 lg:py-8 space-y-10 max-w-[1600px]">
       <Greeting />
+
+      {/* Personalized sections from GET /recommendations (cold-start safe) */}
+      <RecommendationSections limit={8} />
 
       {/* Trending Tracks */}
       <section aria-label="Trending tracks">

@@ -6,13 +6,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   User, Lock, Bell, Eye, Sliders, Palette,
   LogOut, Trash2, Shield, CheckCircle2, Info,
-  Monitor, Moon, Sun, Save, AlertTriangle,
+  Monitor, Moon, Sun, Save, AlertTriangle, CloudCheck,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { updateProfileSchema, type UpdateProfileFormValues } from '@/lib/validators';
 import { useMe, useUpdateMe } from '@/hooks/use-user-data';
 import { useActiveSessions, useLogoutAll, useRevokeSession } from '@/hooks/use-auth';
 import { useDeleteAccount } from '@/hooks/use-account';
+import { useNotificationPreferencesSection } from '@/hooks/use-preferences';
+import { useAuthStore } from '@/stores/auth.store';
+import { useLocale } from '@/providers/locale-provider';
 import {
   usePreferencesStore,
   type ThemeMode, type AccentColor, type AudioQuality,
@@ -122,9 +125,23 @@ function Toggle({ checked, onChange, disabled }: {
 }
 
 function LocalBadge() {
+  const { t } = useLocale();
+  const { isAuthenticated } = useAuthStore();
+
+  // Appearance/privacy toggles are persisted to the account automatically
+  // when signed in (see useServerPreferencesSync); otherwise local-only.
+  if (isAuthenticated) {
+    return (
+      <span className="inline-flex items-center gap-1 text-[10px] text-primary/80 font-medium"
+        title={t('settings.syncedHint')}>
+        <CloudCheck className="h-2.5 w-2.5" /> {t('settings.synced')}
+      </span>
+    );
+  }
   return (
-    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/60 font-medium">
-      <Info className="h-2.5 w-2.5" /> Saved locally
+    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground/60 font-medium"
+      title={t('settings.localHint')}>
+      <Info className="h-2.5 w-2.5" /> {t('settings.localHint')}
     </span>
   );
 }
@@ -381,12 +398,11 @@ const THEME_OPTIONS: { value: ThemeMode; label: string; icon: React.ElementType 
 ];
 
 const ACCENT_OPTIONS: { value: AccentColor; label: string; cls: string }[] = [
+  { value: 'emerald', label: 'Emerald', cls: 'bg-emerald-500' },
   { value: 'violet',  label: 'Violet',  cls: 'bg-violet-500'  },
   { value: 'blue',    label: 'Blue',    cls: 'bg-blue-500'    },
-  { value: 'emerald', label: 'Emerald', cls: 'bg-emerald-500' },
   { value: 'rose',    label: 'Rose',    cls: 'bg-rose-500'    },
   { value: 'amber',   label: 'Amber',   cls: 'bg-amber-500'   },
-  { value: 'cyan',    label: 'Cyan',    cls: 'bg-cyan-500'    },
 ];
 
 function AppearanceSection() {
@@ -506,28 +522,51 @@ function PlaybackSection() {
 
 // ─── Notifications section ────────────────────────────────────────────────────
 
-const NOTIF_ROWS: { key: keyof import('@/stores/preferences.store').NotifDisplayPrefs; label: string; hint: string }[] = [
-  { key: 'newFollower',         label: 'New followers',          hint: 'When someone follows you'               },
-  { key: 'newRelease',          label: 'New releases',           hint: 'From artists you follow'                },
-  { key: 'playlistAdd',         label: 'Playlist additions',     hint: 'When your track is added to a playlist' },
-  { key: 'commentReply',        label: 'Comment replies',        hint: 'When someone replies to your comment'   },
-  { key: 'likeReceived',        label: 'Likes',                  hint: 'When someone likes your content'        },
-  { key: 'subscriptionRenewed', label: 'Subscription renewed',   hint: 'Billing confirmations'                  },
-  { key: 'paymentFailed',       label: 'Payment failures',       hint: 'Important billing alerts'               },
-  { key: 'systemMessages',      label: 'System messages',        hint: 'Platform updates and announcements'     },
+// Notification toggles: local store key + matching server column.
+const NOTIF_ROWS: {
+  localKey: keyof import('@/stores/preferences.store').NotifDisplayPrefs;
+  serverKey: keyof import('@/types').NotificationPreferencesWire;
+  label: string;
+  hint: string;
+}[] = [
+  { localKey: 'newFollower',         serverKey: 'newFollower',        label: 'New followers',        hint: 'When someone follows you'               },
+  { localKey: 'newRelease',          serverKey: 'newRelease',         label: 'New releases',         hint: 'From artists you follow'                },
+  { localKey: 'playlistAdd',         serverKey: 'playlistAdd',        label: 'Playlist additions',   hint: 'When your track is added to a playlist' },
+  { localKey: 'commentReply',        serverKey: 'commentReply',       label: 'Comment replies',      hint: 'When someone replies to your comment'   },
+  { localKey: 'likeReceived',        serverKey: 'likeReceived',       label: 'Likes',                hint: 'When someone likes your content'        },
+  { localKey: 'subscriptionRenewed', serverKey: 'subscriptionUpdate', label: 'Subscription renewed', hint: 'Billing confirmations'                  },
+  { localKey: 'paymentFailed',       serverKey: 'paymentAlert',       label: 'Payment failures',     hint: 'Important billing alerts'               },
+  { localKey: 'systemMessages',      serverKey: 'systemMessage',      label: 'System messages',      hint: 'Platform updates and announcements'     },
 ];
 
 function NotificationsSection() {
   const { notifs, setNotifs } = usePreferencesStore();
+  const { isAuthenticated } = useAuthStore();
+  const { data: serverNotifs, update, isSaving } = useNotificationPreferencesSection();
+
+  const getValue = (row: (typeof NOTIF_ROWS)[number]): boolean =>
+    isAuthenticated && serverNotifs ? serverNotifs[row.serverKey] : notifs[row.localKey];
+
+  const setValue = (row: (typeof NOTIF_ROWS)[number], v: boolean) => {
+    if (isAuthenticated) {
+      // Optimistic server update; local store stays in sync for sign-out.
+      setNotifs({ [row.localKey]: v });
+      update({ [row.serverKey]: v });
+    } else {
+      setNotifs({ [row.localKey]: v });
+    }
+  };
 
   return (
     <SectionCard title="Notification preferences" badge="local"
-      description="Choose which notifications appear in your notification centre. These settings are stored locally.">
-      <div className="space-y-4">
+      description={isAuthenticated
+        ? 'Choose which notifications you receive. Saved to your account.'
+        : 'Choose which notifications appear in your notification centre. These settings are stored locally.'}>
+      <div className={cn('space-y-4', isSaving && 'opacity-80')}>
         {NOTIF_ROWS.map(row => (
-          <FieldRow key={row.key} label={row.label} hint={row.hint}>
-            <Toggle checked={notifs[row.key]}
-              onChange={v => setNotifs({ [row.key]: v })} />
+          <FieldRow key={row.localKey} label={row.label} hint={row.hint}>
+            <Toggle checked={getValue(row)}
+              onChange={v => setValue(row, v)} />
           </FieldRow>
         ))}
       </div>

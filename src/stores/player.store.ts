@@ -60,6 +60,7 @@ interface PlayerState {
   toggleShuffle: () => void;
   cycleRepeat:   () => void;
   addToQueue:    (track: TrackResponse) => void;
+  insertNext:    (track: TrackResponse) => void;
   clearQueue:    () => void;
 
   // New actions
@@ -180,6 +181,27 @@ export const usePlayerStore = create<PlayerState>()(
         },
 
         addToQueue: (track) => set(s => ({ queue: [...s.queue, track] }), false, 'player/addToQueue'),
+
+        /**
+         * "Play next": insert right after the currently playing track so it
+         * becomes the immediate next item without disturbing the rest of
+         * the queue. If nothing is playing, behaves like addToQueue.
+         */
+        insertNext: (track) => {
+          const { queue, queueIndex } = get();
+          if (queueIndex < 0 || !queue.length) {
+            set({ queue: [...queue, track] }, false, 'player/insertNext-append');
+            return;
+          }
+          const next = [...queue];
+          next.splice(queueIndex + 1, 0, track);
+          set({
+            queue: next,
+            shuffledIndices: get().isShuffled
+              ? buildShuffledIndices(next.length, queueIndex)
+              : [],
+          }, false, 'player/insertNext');
+        },
 
         removeFromQueue: (index) => {
           const state = get();

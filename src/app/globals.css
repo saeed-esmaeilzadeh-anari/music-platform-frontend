@@ -41,56 +41,153 @@
 }
 
 /* ─── CSS custom properties — design tokens used by @theme above ─────────────
-   Music streaming platform — dark by default.
+   Two palettes: light (:root) and dark (.dark). <html> starts as .dark and a
+   no-FOUC inline script (see app/layout.tsx) rewrites the class + data-accent
+   from the persisted preferences before first paint.
+   Accent switching: [data-accent] on <html> overrides --primary/--accent/
+   --ring/--waveform-active for both palettes.
    All hsl() values (channel-only) so Tailwind's opacity modifier works:
    bg-primary/50 → background-color: hsl(var(--primary) / 0.5)
    ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
+  /* Light palette — warm neutrals */
+  --background: 0 0% 99%;
+  --card: 220 14% 98%;
+  --popover: 0 0% 100%;
+
+  --foreground: 226 22% 12%;
+  --card-foreground: 226 22% 12%;
+  --popover-foreground: 226 22% 12%;
+
+  --secondary: 220 14% 94%;
+  --secondary-foreground: 226 16% 30%;
+
+  --muted: 220 14% 94%;
+  --muted-foreground: 224 10% 42%;
+
+  --destructive: 0 72% 48%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 220 13% 88%;
+  --input: 220 13% 90%;
+
+  --radius: 0.5rem;
+
+  /* Music-specific tokens (light) */
+  --player-bg: 0 0% 100%;
+  --sidebar-bg: 220 14% 97%;
+  --track-hover: 220 14% 94%;
+  --waveform-inactive: 220 13% 84%;
+
+  /* Default accent (emerald, light-tuned) */
+  --primary: 160 84% 30%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 160 84% 36%;
+  --accent-foreground: 0 0% 100%;
+  --ring: 160 84% 30%;
+  --waveform-active: 160 84% 36%;
+}
+
+.dark {
   /* Background scale — deep navy-black */
   --background: 224 20% 5%; /* #0A0B12 */
   --card: 224 18% 8%; /* #111320 */
   --popover: 224 18% 8%;
 
-  /* Foreground */
   --foreground: 220 14% 96%; /* #F4F5F9 */
   --card-foreground: 220 14% 96%;
   --popover-foreground: 220 14% 96%;
 
-  /* Primary — electric violet */
-  --primary: 263 70% 58%; /* #7C3AED-ish */
-  --primary-foreground: 0 0% 100%;
-
-  /* Secondary — muted surface */
   --secondary: 224 15% 13%; /* #1A1D2E */
   --secondary-foreground: 220 14% 70%;
 
-  /* Muted */
   --muted: 224 15% 13%;
   --muted-foreground: 220 8% 48%; /* #72758A */
 
-  /* Accent — bright violet for hover/active */
-  --accent: 263 85% 68%; /* #A855F7 */
-  --accent-foreground: 0 0% 100%;
-
-  /* Destructive */
   --destructive: 0 72% 51%;
   --destructive-foreground: 0 0% 100%;
 
-  /* Borders & inputs */
   --border: 224 15% 14%; /* #1E2133 */
   --input: 224 15% 12%; /* #171929 */
-  --ring: 263 70% 58%;
 
-  /* Radius */
-  --radius: 0.5rem;
-
-  /* Music-specific tokens */
+  /* Music-specific tokens (dark) */
   --player-bg: 224 25% 6%;
   --sidebar-bg: 224 20% 6%;
   --track-hover: 224 15% 11%;
-  --waveform-active: 263 85% 68%;
   --waveform-inactive: 224 15% 22%;
+
+  /* Default accent (emerald, dark-tuned) */
+  --primary: 160 84% 42%;
+  --primary-foreground: 0 0% 100%;
+  --accent: 160 84% 48%;
+  --accent-foreground: 0 0% 100%;
+  --ring: 160 84% 42%;
+  --waveform-active: 160 84% 48%;
+}
+
+/* ─── Accent overrides (light) ──────────────────────────────────────────────── */
+
+:root[data-accent='violet'] {
+  --primary: 263 70% 46%;
+  --accent: 263 85% 56%;
+  --ring: 263 70% 46%;
+  --waveform-active: 263 85% 56%;
+}
+:root[data-accent='blue'] {
+  --primary: 213 84% 44%;
+  --accent: 213 90% 54%;
+  --ring: 213 84% 44%;
+  --waveform-active: 213 90% 54%;
+}
+:root[data-accent='rose'] {
+  --primary: 347 77% 46%;
+  --accent: 347 82% 56%;
+  --ring: 347 77% 46%;
+  --waveform-active: 347 82% 56%;
+}
+:root[data-accent='amber'] {
+  --primary: 32 92% 40%;
+  --accent: 38 95% 50%;
+  --ring: 32 92% 40%;
+  --waveform-active: 38 95% 50%;
+}
+
+/* ─── Accent overrides (dark) ───────────────────────────────────────────────── */
+
+.dark[data-accent='violet'] {
+  --primary: 263 70% 58%;
+  --accent: 263 85% 68%;
+  --ring: 263 70% 58%;
+  --waveform-active: 263 85% 68%;
+}
+.dark[data-accent='blue'] {
+  --primary: 213 90% 58%;
+  --accent: 213 94% 64%;
+  --ring: 213 90% 58%;
+  --waveform-active: 213 94% 64%;
+}
+.dark[data-accent='rose'] {
+  --primary: 347 77% 58%;
+  --accent: 347 84% 64%;
+  --ring: 347 77% 58%;
+  --waveform-active: 347 84% 64%;
+}
+.dark[data-accent='amber'] {
+  --primary: 38 95% 55%;
+  --accent: 43 96% 60%;
+  --ring: 38 95% 55%;
+  --waveform-active: 43 96% 60%;
+}
+
+/* ─── User preference: reduced motion (mirrors prefers-reduced-motion) ─────── */
+
+[data-motion='reduced'] *,
+[data-motion='reduced'] *::before,
+[data-motion='reduced'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
 }
 
 /* ─── Base resets ─────────────────────────────────────────────────────────── */
@@ -151,10 +248,10 @@
     background-clip: text;
   }
 
-  /* Violet glow — signature effect for waveform bars */
-  .glow-violet {
-    box-shadow: 0 0 20px hsl(263 85% 68% / 0.4),
-      0 0 60px hsl(263 85% 68% / 0.15);
+  /* Signature glow — follows the active accent */
+  .glow-accent {
+    box-shadow: 0 0 20px hsl(var(--waveform-active) / 0.4),
+      0 0 60px hsl(var(--waveform-active) / 0.15);
   }
 
   /* Shimmer skeleton */

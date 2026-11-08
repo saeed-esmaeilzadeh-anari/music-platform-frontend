@@ -45,7 +45,9 @@
     "roleListener": "شنونده",
     "roleArtist": "هنرمند",
     "roleModerator": "ناظر",
-    "roleAdmin": "مدیر"
+    "roleAdmin": "مدیر",
+    "cancel": "انصراف",
+    "close": "بستن"
   },
   "auth": {
     "signInTitle": "ورود",
@@ -166,5 +168,71 @@
     "sessionRefreshTitle": "پروفایل ساخته شد",
     "sessionRefreshDescription": "برای فعال شدن دسترسی‌ها، دوباره وارد حساب شوید.",
     "createFailed": "ایجاد پروفایل ناموفق بود"
+  },
+  "contextMenu": {
+    "playNext": "پخش بعدی",
+    "addToQueue": "افزودن به صف",
+    "addToPlaylist": "افزودن به پلی‌لیست",
+    "like": "لایک",
+    "unlike": "حذف لایک",
+    "report": "گزارش تخلف",
+    "addedPlayNext": "به‌عنوان بعدی در صف قرار گرفت",
+    "addedToQueue": "به صف اضافه شد"
+  },
+  "report": {
+    "title": "گزارش محتوا",
+    "targetLabel": "شما در حال گزارش‌کردن «{title}» هستید.",
+    "reasonLabel": "دلیل گزارش",
+    "detailsPlaceholder": "توضیح بیشتر (اختیاری)",
+    "duplicate": "شما قبلاً این محتوا را گزارش کرده‌اید.",
+    "submit": "ارسال گزارش",
+    "submitting": "در حال ارسال…",
+    "reason": {
+      "copyright": "نقض کپی‌رایت",
+      "explicit": "محتوای نامناسب",
+      "spam": "هرزنامه",
+      "harassment": "آزار و اذیت",
+      "misinformation": "اطلاعات نادرست",
+      "other": "سایر"
+    }
+  },
+  "follow": {
+    "follow": "دنبال‌کردن",
+    "following": "دنبال می‌کنید"
+  },
+  "recommendations": {
+    "recentlyPlayed": "شنیده‌های اخیر شما",
+    "newReleases": "تازه‌ها",
+    "trending": "پرطرفدارها",
+    "artistsForYou": "آرتیست‌های پیشنهادی",
+    "madeForYou": "برای شما ساخته شده",
+    "becauseYouFollow": "به‌دلیل دنبال‌کردن‌های شما"
+  },
+  "billing": {
+    "successTitle": "پرداخت با موفقیت انجام شد",
+    "successDescription": "اشتراک شما به‌زودی فعال می‌شود. اگر فعال‌سازی چند لحظه طول کشید، صفحه اشتراک را تازه‌سازی کنید.",
+    "cancelTitle": "پرداخت لغو شد",
+    "cancelDescription": "هیچ مبلغی کسر نشده است. هر وقت آماده بودید می‌توانید دوباره تلاش کنید.",
+    "tryAgain": "تلاش دوباره",
+    "viewSubscription": "مشاهده اشتراک",
+    "backHome": "بازگشت به خانه"
+  },
+  "payments": {
+    "title": "تاریخچه پرداخت‌ها",
+    "description": "همه پرداخت‌های حساب شما، جدیدترین در ابتدا.",
+    "emptyTitle": "هنوز پرداختی ثبت نشده",
+    "emptyDescription": "با ارتقا به اشتراک پرمیوم، پرداخت‌های شما اینجا نمایش داده می‌شود.",
+    "status": {
+      "succeeded": "موفق",
+      "pending": "در انتظار",
+      "failed": "ناموفق",
+      "refunded": "بازگشت‌خورده"
+    }
+  },
+  "settings": {
+    "synced": "همگام با حساب",
+    "syncedHint": "این تنظیمات به حساب کاربری شما متصل است و روی همه دستگاه‌ها اعمال می‌شود.",
+    "localHint": "این تنظیم فقط روی همین مرورگر ذخیره می‌شود.",
+    "syncSaving": "در حال ذخیره…"
   }
 }

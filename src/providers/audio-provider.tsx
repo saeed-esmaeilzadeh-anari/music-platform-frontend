@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { initAudioEngine } from '@/lib/audio/audio-engine';
+import { initMediaSession } from '@/lib/audio/media-session';
 import { usePlayerStore } from '@/stores/player.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { tracksService } from '@/services/tracks.service';
@@ -14,18 +15,20 @@ import { PLAY_REGISTER_THRESHOLD_SEC } from '@/lib/constants';
  *
  * Responsibilities:
  *   1. Boot the AudioEngine singleton on first client render
- *   2. Register POST /tracks/:id/play after PLAY_REGISTER_THRESHOLD_SEC seconds
- *   3. Register global keyboard shortcuts (no React state needed — pure DOM)
+ *   2. Sync OS media controls (Media Session API)
+ *   3. Register POST /tracks/:id/play after PLAY_REGISTER_THRESHOLD_SEC seconds
+ *   4. Register global keyboard shortcuts (no React state needed — pure DOM)
  */
 export function AudioProvider({ children }: { children: React.ReactNode }) {
   const booted          = useRef(false);
   const registeredRef   = useRef<string | null>(null);
 
-  // ── 1. Boot engine ────────────────────────────────────────────────────────
+  // ── 1. Boot engine + media session ────────────────────────────────────────
   useEffect(() => {
     if (booted.current) return;
     booted.current = true;
     initAudioEngine();
+    initMediaSession();
   }, []);
 
   // ── 2. Reset sentinel when track changes ──────────────────────────────────

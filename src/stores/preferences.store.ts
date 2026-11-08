@@ -18,7 +18,8 @@ import { persist } from 'zustand/middleware';
 // ─── Appearance ───────────────────────────────────────────────────────────────
 
 export type ThemeMode   = 'dark' | 'light' | 'system';
-export type AccentColor = 'violet' | 'blue' | 'emerald' | 'rose' | 'amber' | 'cyan';
+/** Kept in sync with the backend AccentPreference enum (5 accents). */
+export type AccentColor = 'violet' | 'blue' | 'emerald' | 'rose' | 'amber';
 
 // ─── Playback ─────────────────────────────────────────────────────────────────
 
@@ -59,12 +60,14 @@ export interface PrivacyPrefs {
 interface PreferencesState {
   theme:     ThemeMode;
   accent:    AccentColor;
+  reducedMotion: boolean;
   playback:  PlaybackPrefs;
   notifs:    NotifDisplayPrefs;
   privacy:   PrivacyPrefs;
 
   setTheme:   (v: ThemeMode)    => void;
   setAccent:  (v: AccentColor)  => void;
+  setReducedMotion: (v: boolean) => void;
   setPlayback: (v: Partial<PlaybackPrefs>)     => void;
   setNotifs:   (v: Partial<NotifDisplayPrefs>) => void;
   setPrivacy:  (v: Partial<PrivacyPrefs>)      => void;
@@ -101,24 +104,40 @@ export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({
       theme:   'dark',
-      accent:  'violet',
+      accent:  'emerald',
+      reducedMotion: false,
       playback: DEFAULT_PLAYBACK,
       notifs:   DEFAULT_NOTIFS,
       privacy:  DEFAULT_PRIVACY,
 
       setTheme:   (theme)    => set({ theme }),
       setAccent:  (accent)   => set({ accent }),
+      setReducedMotion: (reducedMotion) => set({ reducedMotion }),
       setPlayback: (v)       => set(s => ({ playback: { ...s.playback, ...v } })),
       setNotifs:   (v)       => set(s => ({ notifs:   { ...s.notifs,   ...v } })),
       setPrivacy:  (v)       => set(s => ({ privacy:  { ...s.privacy,  ...v } })),
       resetAll:   ()         => set({
         theme:   'dark',
-        accent:  'violet',
+        accent:  'emerald',
+        reducedMotion: false,
         playback: DEFAULT_PLAYBACK,
         notifs:   DEFAULT_NOTIFS,
         privacy:  DEFAULT_PRIVACY,
       }),
     }),
-    { name: 'ms-prefs' },
+    {
+      name: 'ms-prefs',
+      version: 1,
+      // Migration: the 'cyan' accent existed before the server-synced accent
+      // set (5 accents); map it onto the closest supported value.
+      migrate: (state) => {
+        const s = state as Partial<PreferencesState>;
+        const legacyAccent = s.accent as string | undefined;
+        if (legacyAccent === 'cyan' || s.accent === undefined) {
+          return { ...s, accent: 'violet' } as PreferencesState;
+        }
+        return state as PreferencesState;
+      },
+    },
   ),
 );

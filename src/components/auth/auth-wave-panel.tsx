@@ -62,11 +62,11 @@ export function AuthWavePanel({ heading, subheading, features }: AuthWavePanelPr
           aria-hidden
           role="presentation"
         >
-          <span className="w-[6px] rounded-full bg-primary/90 glow-violet wave-bar-1" style={{ minHeight: 18 }} />
-          <span className="w-[6px] rounded-full bg-primary/90 glow-violet wave-bar-2" style={{ minHeight: 18 }} />
-          <span className="w-[6px] rounded-full bg-accent/90     glow-violet wave-bar-3" style={{ minHeight: 18 }} />
-          <span className="w-[6px] rounded-full bg-primary/90 glow-violet wave-bar-4" style={{ minHeight: 18 }} />
-          <span className="w-[6px] rounded-full bg-primary/90 glow-violet wave-bar-5" style={{ minHeight: 18 }} />
+          <span className="w-[6px] rounded-full bg-primary/90 glow-accent wave-bar-1" style={{ minHeight: 18 }} />
+          <span className="w-[6px] rounded-full bg-primary/90 glow-accent wave-bar-2" style={{ minHeight: 18 }} />
+          <span className="w-[6px] rounded-full bg-accent/90     glow-accent wave-bar-3" style={{ minHeight: 18 }} />
+          <span className="w-[6px] rounded-full bg-primary/90 glow-accent wave-bar-4" style={{ minHeight: 18 }} />
+          <span className="w-[6px] rounded-full bg-primary/90 glow-accent wave-bar-5" style={{ minHeight: 18 }} />
         </div>
 
         <div className="space-y-3">

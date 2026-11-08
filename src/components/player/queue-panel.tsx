@@ -121,11 +121,13 @@ function TabButton({
 
 export function QueuePanel({ onClose }: { onClose: () => void }) {
   const [tab, setTab] = useState<Tab>('queue');
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [overIndex, setOverIndex] = useState<number | null>(null);
 
   const {
     queue, queueIndex, currentTrack, isPlaying,
     recentlyPlayed, play, pause, resume,
-    removeFromQueue, clearQueue, clearRecentlyPlayed,
+    removeFromQueue, moveQueueItem, clearQueue, clearRecentlyPlayed,
   } = usePlayerStore();
 
   const handleQueuePlay = (track: TrackResponse, idx: number) => {
@@ -134,6 +136,15 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
     } else {
       play(track, queue);
     }
+  };
+
+  // HTML5 drag-and-drop reordering of the queue.
+  const handleDrop = (targetIndex: number) => {
+    if (dragIndex !== null && dragIndex !== targetIndex) {
+      moveQueueItem(dragIndex, targetIndex);
+    }
+    setDragIndex(null);
+    setOverIndex(null);
   };
 
   return (
@@ -189,10 +200,25 @@ export function QueuePanel({ onClose }: { onClose: () => void }) {
                 </div>
                 <div className="space-y-0.5">
                   {queue.map((track, i) => (
-                    <QueueRow key={`${track.id}-${i}`} track={track} index={i}
-                      isCurrent={i === queueIndex} isPlaying={isPlaying && i === queueIndex}
-                      onPlay={() => handleQueuePlay(track, i)}
-                      onRemove={() => removeFromQueue(i)} />
+                    <div
+                      key={`${track.id}-${i}`}
+                      draggable
+                      onDragStart={() => setDragIndex(i)}
+                      onDragOver={(e) => { e.preventDefault(); if (i !== dragIndex) setOverIndex(i); }}
+                      onDragLeave={() => setOverIndex(prev => (prev === i ? null : prev))}
+                      onDrop={(e) => { e.preventDefault(); handleDrop(i); }}
+                      onDragEnd={() => { setDragIndex(null); setOverIndex(null); }}
+                      className={cn(
+                        'rounded-md transition-opacity',
+                        dragIndex === i && 'opacity-40',
+                        overIndex === i && dragIndex !== null && 'ring-1 ring-primary',
+                      )}
+                    >
+                      <QueueRow track={track} index={i}
+                        isCurrent={i === queueIndex} isPlaying={isPlaying && i === queueIndex}
+                        onPlay={() => handleQueuePlay(track, i)}
+                        onRemove={() => removeFromQueue(i)} />
+                    </div>
                   ))}
                 </div>
               </>
