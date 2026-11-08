@@ -49,6 +49,7 @@ export interface NotifDisplayPrefs {
 // ─── Privacy ──────────────────────────────────────────────────────────────────
 
 export interface PrivacyPrefs {
+  publicProfile:         boolean;
   showListeningActivity: boolean;
   showPlaylists:         boolean;
   showFavorites:         boolean;
@@ -94,6 +95,7 @@ const DEFAULT_NOTIFS: NotifDisplayPrefs = {
 };
 
 const DEFAULT_PRIVACY: PrivacyPrefs = {
+  publicProfile:         true,
   showListeningActivity: true,
   showPlaylists:         true,
   showFavorites:         true,
@@ -127,16 +129,23 @@ export const usePreferencesStore = create<PreferencesState>()(
     }),
     {
       name: 'ms-prefs',
-      version: 1,
+      version: 2,
       // Migration: the 'cyan' accent existed before the server-synced accent
       // set (5 accents); map it onto the closest supported value.
       migrate: (state) => {
         const s = state as Partial<PreferencesState>;
         const legacyAccent = s.accent as string | undefined;
-        if (legacyAccent === 'cyan' || s.accent === undefined) {
-          return { ...s, accent: 'violet' } as PreferencesState;
-        }
-        return state as PreferencesState;
+        return {
+          ...s,
+          accent: legacyAccent === 'cyan' || legacyAccent === undefined
+            ? 'violet'
+            : legacyAccent,
+          privacy: {
+            ...DEFAULT_PRIVACY,
+            ...(s.privacy ?? {}),
+            publicProfile: s.privacy?.publicProfile ?? true,
+          },
+        } as PreferencesState;
       },
     },
   ),

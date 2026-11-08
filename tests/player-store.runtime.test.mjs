@@ -1,8 +1,8 @@
-import test, { beforeEach } from 'node:test';
+import test, { after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import Module from 'node:module';
+import { createRequire } from 'node:module';
 import ts from 'typescript';
 
 // Load the real TypeScript store through TypeScript's transpiler. This exercises
@@ -25,12 +25,14 @@ const errors = (compiled.diagnostics ?? []).filter(
 );
 assert.equal(errors.length, 0, 'player store should transpile without TypeScript errors');
 
-const storeModule = new Module(storePath, module);
-storeModule.filename = storePath;
-storeModule.paths = Module._nodeModulePaths(path.dirname(storePath));
-storeModule._compile(compiled.outputText, storePath);
+const compiledStorePath = path.join(projectRoot, 'tests', `.player-store-runtime-${process.pid}.cjs`);
+const requireFromTest = createRequire(import.meta.url);
+await writeFile(compiledStorePath, compiled.outputText, 'utf8');
+after(async () => {
+  await rm(compiledStorePath, { force: true });
+});
 
-const { usePlayerStore } = storeModule.exports;
+const { usePlayerStore } = requireFromTest(compiledStorePath);
 
 const track = id => ({ id, title: `Track ${id}` });
 const tracks = (...ids) => ids.map(track);
