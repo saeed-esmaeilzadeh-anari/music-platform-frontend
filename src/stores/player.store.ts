@@ -182,16 +182,75 @@ export const usePlayerStore = create<PlayerState>()(
         addToQueue: (track) => set(s => ({ queue: [...s.queue, track] }), false, 'player/addToQueue'),
 
         removeFromQueue: (index) => {
-          const { queue, queueIndex } = get();
-          const next = queue.filter((_, i) => i !== index);
-          set({ queue: next, queueIndex: index < queueIndex ? queueIndex - 1 : queueIndex }, false, 'player/removeFromQueue');
+          const state = get();
+          if (index < 0 || index >= state.queue.length) return;
+
+          const next = state.queue.filter((_, i) => i !== index);
+          if (next.length === 0) {
+            set({
+              queue: [],
+              queueIndex: -1,
+              currentTrack: null,
+              progressSec: 0,
+              durationSec: 0,
+              isPlaying: false,
+              isLoading: false,
+              shuffledIndices: [],
+            }, false, 'player/removeQueueLastItem');
+            return;
+          }
+
+          if (index === state.queueIndex) {
+            const nextIndex = Math.min(index, next.length - 1);
+            const nextTrack = next[nextIndex];
+            set({
+              queue: next,
+              queueIndex: nextIndex,
+              currentTrack: nextTrack,
+              progressSec: 0,
+              durationSec: 0,
+              isPlaying: true,
+              isLoading: true,
+              shuffledIndices: state.isShuffled
+                ? buildShuffledIndices(next.length, nextIndex)
+                : [],
+            }, false, 'player/removeCurrentQueueItem');
+            return;
+          }
+
+          const nextIndex = index < state.queueIndex ? state.queueIndex - 1 : state.queueIndex;
+          set({
+            queue: next,
+            queueIndex: nextIndex,
+            shuffledIndices: state.isShuffled
+              ? buildShuffledIndices(next.length, nextIndex)
+              : [],
+          }, false, 'player/removeFromQueue');
         },
 
         moveQueueItem: (from, to) => {
-          const next = [...get().queue];
+          const state = get();
+          if (
+            from < 0 || from >= state.queue.length ||
+            to < 0 || to >= state.queue.length ||
+            from === to
+          ) return;
+
+          const next = [...state.queue];
           const [moved] = next.splice(from, 1);
           next.splice(to, 0, moved);
-          set({ queue: next }, false, 'player/moveQueueItem');
+
+          // Keep the same track playing after reordering the queue.
+          const nextIndex = state.currentTrack
+            ? next.findIndex(track => track.id === state.currentTrack?.id)
+            : state.queueIndex;
+          set({
+            queue: next,
+            queueIndex: nextIndex,
+            shuffledIndices: state.isShuffled
+              ? buildShuffledIndices(next.length, nextIndex)
+              : [],
+          }, false, 'player/moveQueueItem');
         },
 
         clearQueue: () => set({ queue: [], queueIndex: -1, currentTrack: null, isPlaying: false }, false, 'player/clearQueue'),
