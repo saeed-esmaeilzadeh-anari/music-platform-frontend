@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ListMusic, Music2, Clock } from 'lucide-react';
-import { usePlaylist, type PlaylistWithTracks } from '@/hooks/use-playlists';
+import { usePlaylist, useReorderPlaylistTrack, type PlaylistWithTracks } from '@/hooks/use-playlists';
 import { useAuthStore } from '@/stores/auth.store';
+import { usePlayerStore } from '@/stores/player.store';
 import { PlaylistHeader }         from '@/components/playlist/playlist-header';
 import { PlaylistActionsBar }     from '@/components/playlist/playlist-actions-bar';
 import { PlaylistTrackRow }       from '@/components/playlist/playlist-track-row';
@@ -92,22 +93,52 @@ export function PlaylistClient({ id }: PlaylistClientProps) {
   const existingIds    = useMemo(() => new Set(tracks.map(t => t.id)), [tracks]);
   const isOwner        = !!user && !!playlist && user.id === playlist.ownerId;
 
-  // Simple play state (replace with your real player store when wiring up)
-  const [currentTrackId, setCurrentTrackId] = useState<string | null>(null);
-  const [isPlaying,      setIsPlaying]      = useState(false);
+  // Real player state — the shared store owns playback so the persistent
+  // player bar, queue panel and this page stay in sync.
+  const currentTrackId = usePlayerStore(s => s.currentTrack?.id ?? null);
+  const isPlaying      = usePlayerStore(s => s.isPlaying);
+  const play           = usePlayerStore(s => s.play);
+  const togglePlay     = usePlayerStore(s => s.togglePlay);
   const isPlaylistPlaying = isPlaying && tracks.some(t => t.id === currentTrackId);
 
   const handlePlayPause = () => {
     if (!tracks.length) return;
-    if (isPlaylistPlaying) { setIsPlaying(false); return; }
-    setCurrentTrackId(tracks[0].id);
-    setIsPlaying(true);
+    if (isPlaylistPlaying) { togglePlay(); return; }
+    const startTrack =
+      tracks.find(t => t.id === currentTrackId) ?? tracks[0];
+    play(startTrack, tracks);
   };
 
   const handleTrackPlay = (track: TrackResponse) => {
-    if (currentTrackId === track.id) { setIsPlaying(v => !v); return; }
-    setCurrentTrackId(track.id);
-    setIsPlaying(true);
+    if (currentTrackId === track.id) { togglePlay(); return; }
+    play(track, tracks);
+  };
+
+  // ── Drag-and-drop reorder (owner only) ──────────────────────────────────
+  const reorder = useReorderPlaylistTrack(id);
+  const dragIndexRef = useRef<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+  useEffect(() => {
+    const onDragEnd = () => {
+      dragIndexRef.current = null;
+      setDragOverIndex(null);
+    };
+    document.addEventListener('dragend', onDragEnd);
+    return () => document.removeEventListener('dragend', onDragEnd);
+  }, []);
+
+  const handleTrackDrop = (targetIndex: number) => {
+    const fromIndex = dragIndexRef.current;
+    if (fromIndex !== null && fromIndex !== targetIndex) {
+      // The mutation moves `trackId` from its current index to `position`.
+      reorder.mutate({
+        trackId: playlistTracks[fromIndex].track.id,
+        position: targetIndex,
+      });
+    }
+    dragIndexRef.current = null;
+    setDragOverIndex(null);
   };
 
   // Loading
@@ -175,19 +206,40 @@ export function PlaylistClient({ id }: PlaylistClientProps) {
 
             <div className="mt-1 space-y-0.5">
               {playlistTracks.map((pt, i) => (
-                <PlaylistTrackRow
+                <div
                   key={`${pt.track.id}-${i}`}
-                  track={pt.track}
-                  index={i}
-                  totalTracks={tracks.length}
-                  playlistId={id}
-                  isOwner={isOwner}
-                  addedAt={pt.addedAt}
-                  isCurrent={currentTrackId === pt.track.id}
-                  isPlaying={isPlaying && currentTrackId === pt.track.id}
-                  onPlay={() => handleTrackPlay(pt.track)}
-                  onAddToOther={() => {}}
-                />
+                  draggable={isOwner}
+                  onDragStart={() => { dragIndexRef.current = i; }}
+                  onDragOver={(e) => {
+                    if (!isOwner) return;
+                    e.preventDefault();
+                    setDragOverIndex(i);
+                  }}
+                  onDrop={(e) => {
+                    if (!isOwner) return;
+                    e.preventDefault();
+                    handleTrackDrop(i);
+                  }}
+                  className={cn(
+                    'rounded-md',
+                    dragOverIndex === i && 'ring-1 ring-primary',
+                    isOwner && 'cursor-grab active:cursor-grabbing',
+                  )}
+                  title={isOwner ? 'Drag to reorder' : undefined}
+                >
+                  <PlaylistTrackRow
+                    track={pt.track}
+                    index={i}
+                    totalTracks={tracks.length}
+                    playlistId={id}
+                    isOwner={isOwner}
+                    addedAt={pt.addedAt}
+                    isCurrent={currentTrackId === pt.track.id}
+                    isPlaying={isPlaying && currentTrackId === pt.track.id}
+                    onPlay={() => handleTrackPlay(pt.track)}
+                    onAddToOther={() => {}}
+                  />
+                </div>
               ))}
             </div>
           </>

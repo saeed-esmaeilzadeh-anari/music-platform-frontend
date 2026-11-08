@@ -26,12 +26,36 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+// Applied BEFORE first paint so the persisted theme/accent never flashes.
+// Reads the same 'ms-prefs' key the preferences store persists (zustand
+// persist format: { state: { theme, accent, ... }, version: 1 }).
+const themeInitScript = `
+(function(){
+  try {
+    var raw = localStorage.getItem('ms-prefs');
+    var prefs = raw ? (JSON.parse(raw).state || {}) : {};
+    var theme = prefs.theme || 'dark';
+    var accent = prefs.accent || 'emerald';
+    if (accent === 'cyan') accent = 'violet';
+    var dark = theme === 'dark' || (theme === 'system' &&
+      window.matchMedia('(prefers-color-scheme: dark)').matches);
+    var el = document.documentElement;
+    el.classList.toggle('dark', dark);
+    el.setAttribute('data-accent', accent);
+    if (prefs.reducedMotion) el.setAttribute('data-motion', 'reduced');
+  } catch (e) {}
+})();
+`;
+
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getServerLocale();
   const { dir } = localeMeta[locale];
 
   return (
     <html lang={locale} dir={dir} className={`${iransansweb.variable} dark font-iransansweb antialiased bg-background text-foreground`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-svh bg-background font-iransansweb antialiased text-foreground">
         <LocaleProvider initialLocale={locale}>
           <RootProviders>{children}</RootProviders>

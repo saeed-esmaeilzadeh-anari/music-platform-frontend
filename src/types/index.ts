@@ -446,15 +446,8 @@ export interface UnreadCountResponse {
 }
 
 // -----------------------------------------------------------
-// SEARCH  (mirrors: search/dto/*)
+// SEARCH  (mirrors: search/dto/* — v2 "playable" shape below)
 // -----------------------------------------------------------
-
-export interface SearchResult {
-  tracks: Array<{ id: string; title: string; artistName: string }>;
-  albums: Array<{ id: string; title: string; artistName: string }>;
-  artists: Array<{ id: string; stageName: string }>;
-  playlists: Array<{ id: string; title: string }>;
-}
 
 export interface SearchQuery extends PaginationQuery {
   q: string;
@@ -545,4 +538,182 @@ export interface AdminDashboardStats {
 
 export interface UpdateUserStatusDto {
   status: "ACTIVE" | "SUSPENDED";
+}
+
+// -----------------------------------------------------------
+// PREFERENCES  (mirrors: preferences/dto/* — wire enums are lowercase)
+// -----------------------------------------------------------
+
+export type ThemeWire = "light" | "dark" | "system";
+export type AccentWire = "emerald" | "violet" | "rose" | "amber" | "blue";
+export type LanguageWire = "fa" | "en";
+
+export interface UserPreferencesWire {
+  theme: ThemeWire;
+  accent: AccentWire;
+  language: LanguageWire;
+  reducedMotion: boolean;
+  publicProfile: boolean;
+  showListeningActivity: boolean;
+}
+
+export interface UpdateUserPreferencesDto {
+  theme?: ThemeWire;
+  accent?: AccentWire;
+  language?: LanguageWire;
+  reducedMotion?: boolean;
+  publicProfile?: boolean;
+  showListeningActivity?: boolean;
+}
+
+export interface NotificationPreferencesWire {
+  newFollower: boolean;
+  newRelease: boolean;
+  playlistAdd: boolean;
+  commentReply: boolean;
+  likeReceived: boolean;
+  subscriptionUpdate: boolean;
+  paymentAlert: boolean;
+  systemMessage: boolean;
+  pushEnabled: boolean;
+  emailDigest: boolean;
+}
+
+export type UpdateNotificationPreferencesDto =
+  Partial<NotificationPreferencesWire>;
+
+// -----------------------------------------------------------
+// SEARCH (v2 — playable results + genres)
+// -----------------------------------------------------------
+
+export interface PlayableTrackItem {
+  id: string;
+  title: string;
+  audioUrl: string | null;
+  coverUrl: string | null;
+  durationSec: number;
+  artistId: string;
+  artistName: string;
+  albumId: string | null;
+  isExplicit: boolean;
+}
+
+export interface PlayableAlbumItem {
+  id: string;
+  title: string;
+  coverUrl: string | null;
+  artistId: string;
+  artistName: string;
+}
+
+export interface PlayableArtistItem {
+  id: string;
+  stageName: string;
+  imageUrl: string | null;
+  monthlyListeners: number;
+  isVerified: boolean;
+}
+
+export interface PlayablePlaylistItem {
+  id: string;
+  title: string;
+  coverUrl: string | null;
+  ownerName: string | null;
+  trackCount: number;
+}
+
+export interface SearchGenreItem {
+  id: string;
+  name: string;
+  slug: string;
+  imageUrl: string | null;
+}
+
+export interface SearchResultV2 {
+  tracks: PlayableTrackItem[];
+  albums: PlayableAlbumItem[];
+  artists: PlayableArtistItem[];
+  playlists: PlayablePlaylistItem[];
+  genres: SearchGenreItem[];
+}
+
+// -----------------------------------------------------------
+// RECOMMENDATIONS  (mirrors: recommendations/dto/*)
+// -----------------------------------------------------------
+
+export type RecommendationSectionId =
+  | "recently-played"
+  | "new-releases"
+  | "trending"
+  | "artists-for-you"
+  | "made-for-you"
+  | "because-you-follow";
+
+export interface RecommendationSection {
+  id: RecommendationSectionId;
+  type: "track" | "artist" | "playlist" | "album";
+  items: Array<
+    | PlayableTrackItem
+    | PlayableArtistItem
+    | PlayablePlaylistItem
+    | PlayableAlbumItem
+  >;
+}
+
+export interface RecommendationsResponse {
+  sections: RecommendationSection[];
+  coldStart: boolean;
+  generatedAt: string;
+}
+
+// -----------------------------------------------------------
+// REPORTS  (mirrors: reports/dto/*)
+// -----------------------------------------------------------
+
+export type ReportTargetType =
+  | "TRACK"
+  | "ALBUM"
+  | "PLAYLIST"
+  | "COMMENT"
+  | "USER"
+  | "ARTIST";
+
+export type ReportReason =
+  | "COPYRIGHT"
+  | "EXPLICIT_CONTENT"
+  | "SPAM"
+  | "HARASSMENT"
+  | "MISINFORMATION"
+  | "OTHER";
+
+export interface CreateReportDto {
+  targetType: ReportTargetType;
+  targetId: string;
+  reason: ReportReason;
+  details?: string;
+}
+
+// -----------------------------------------------------------
+// FOLLOWS  (mirrors: follows/*)
+// -----------------------------------------------------------
+
+export interface FollowedArtist {
+  followedAt: string;
+  artist: {
+    id: string;
+    stageName: string;
+    imageUrl: string | null;
+    bannerUrl: string | null;
+    isVerified: boolean;
+    monthlyListeners: number;
+  } | null;
+}
+
+export interface FollowingList {
+  items: FollowedArtist[];
+  meta: { totalItems: number; skip: number; take: number };
+}
+
+export interface FollowState {
+  following: boolean;
 }

@@ -5,6 +5,8 @@ import { useArtist } from '@/hooks/use-artists';
 import { useTracks } from '@/hooks/use-tracks';
 import { useArtistAlbums } from '@/hooks/use-albums';
 import { usePlayerStore } from '@/stores/player.store';
+import { useAuthStore } from '@/stores/auth.store';
+import { FollowArtistButton } from '@/components/artist/follow-artist-button';
 import { TrackRow } from '@/components/track/track-card';
 import { AlbumCard } from '@/components/album/album-card';
 import { SectionHeader } from '@/components/shared/section-header';
@@ -18,6 +20,8 @@ export function ArtistClient({ id }: { id: string }) {
   const { data: tracks,  isLoading: tracksLoading  } = useTracks({ artistId: id, limit: 10, status: 'PUBLISHED' });
   const { data: albums,  isLoading: albumsLoading  } = useArtistAlbums(id, { limit: 12 });
   const { play } = usePlayerStore();
+  const { user } = useAuthStore();
+  const isSelf = !!user && artist?.userId === user.id;
 
   const handlePlayAll = () => {
     if (tracks?.items.length) play(tracks.items[0], tracks.items);
@@ -68,6 +72,7 @@ export function ArtistClient({ id }: { id: string }) {
         >
           <Play className="h-5 w-5 fill-current translate-x-px" />
         </button>
+        <FollowArtistButton artistId={id} isSelf={isSelf} />
       </div>
 
       <div className="px-6 lg:px-8 space-y-10 mt-6">

@@ -45,7 +45,9 @@
     "roleListener": "Listener",
     "roleArtist": "Artist",
     "roleModerator": "Moderator",
-    "roleAdmin": "Admin"
+    "roleAdmin": "Admin",
+    "cancel": "Cancel",
+    "close": "Close"
   },
   "auth": {
     "signInTitle": "Sign in",
@@ -166,5 +168,71 @@
     "sessionRefreshTitle": "Profile created",
     "sessionRefreshDescription": "Sign in again to refresh your upload permissions.",
     "createFailed": "Could not create your artist profile"
+  },
+  "contextMenu": {
+    "playNext": "Play next",
+    "addToQueue": "Add to queue",
+    "addToPlaylist": "Add to playlist",
+    "like": "Like",
+    "unlike": "Unlike",
+    "report": "Report",
+    "addedPlayNext": "Queued to play next",
+    "addedToQueue": "Added to queue"
+  },
+  "report": {
+    "title": "Report content",
+    "targetLabel": "You are reporting “{title}”.",
+    "reasonLabel": "Reason",
+    "detailsPlaceholder": "Additional details (optional)",
+    "duplicate": "You have already reported this content.",
+    "submit": "Submit report",
+    "submitting": "Submitting…",
+    "reason": {
+      "copyright": "Copyright violation",
+      "explicit": "Explicit content",
+      "spam": "Spam",
+      "harassment": "Harassment",
+      "misinformation": "Misinformation",
+      "other": "Other"
+    }
+  },
+  "follow": {
+    "follow": "Follow",
+    "following": "Following"
+  },
+  "recommendations": {
+    "recentlyPlayed": "Recently played",
+    "newReleases": "New releases",
+    "trending": "Trending",
+    "artistsForYou": "Artists for you",
+    "madeForYou": "Made for you",
+    "becauseYouFollow": "Because you follow"
+  },
+  "billing": {
+    "successTitle": "Payment successful",
+    "successDescription": "Your subscription will be activated in a few moments. If it takes longer, refresh the subscription page.",
+    "cancelTitle": "Checkout canceled",
+    "cancelDescription": "You have not been charged. You can retry whenever you are ready.",
+    "tryAgain": "Try again",
+    "viewSubscription": "View subscription",
+    "backHome": "Back to home"
+  },
+  "payments": {
+    "title": "Payment history",
+    "description": "All charges on your account, newest first.",
+    "emptyTitle": "No payments yet",
+    "emptyDescription": "Upgrade to premium and your payments will appear here.",
+    "status": {
+      "succeeded": "Succeeded",
+      "pending": "Pending",
+      "failed": "Failed",
+      "refunded": "Refunded"
+    }
+  },
+  "settings": {
+    "synced": "Synced to account",
+    "syncedHint": "These preferences are stored on your account and applied on every device.",
+    "localHint": "Saved only in this browser.",
+    "syncSaving": "Saving…"
   }
 }

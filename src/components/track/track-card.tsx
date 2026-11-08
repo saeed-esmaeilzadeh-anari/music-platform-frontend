@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { Play, Pause, MoreHorizontal, ListPlus, Heart } from 'lucide-react';
+import { Play, Pause, MoreHorizontal, Heart } from 'lucide-react';
 import { cn, formatDuration, formatCount } from '@/lib/utils/index';
 import { usePlayTrack } from '@/hooks/use-player';
 import { useAddFavorite } from '@/hooks/use-catalog';
 import { CoverImage } from '@/components/shared/cover-image';
 import { AddToPlaylistModal } from '@/components/shared/add-to-playlist-modal';
+import { TrackActionsMenu } from '@/components/shared/track-actions-menu';
 import { ROUTES } from '@/lib/constants';
 import type { TrackResponse } from '@/types';
 
@@ -25,14 +26,38 @@ export function TrackRow({ track, index, queue, showArtist = true }: TrackRowPro
   const addFav = useAddFavorite();
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close the actions menu on outside click / Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (!menuRef.current?.contains(e.target as Node)) setMenuOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
 
   return (
     <>
-      <div className={cn(
-        'group flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors cursor-default',
-        'hover:bg-secondary',
-        isCurrent && 'bg-primary/5',
-      )}>
+      <div
+        onContextMenu={(e) => {
+          e.preventDefault();
+          setMenuOpen(true);
+        }}
+        className={cn(
+          'group flex items-center gap-3 rounded-md px-3 py-2.5 transition-colors cursor-default',
+          'hover:bg-secondary',
+          isCurrent && 'bg-primary/5',
+        )}
+      >
         {/* Index / play */}
         <div className="flex h-8 w-8 shrink-0 items-center justify-center">
           {isCurrent ? (
@@ -98,20 +123,18 @@ export function TrackRow({ track, index, queue, showArtist = true }: TrackRowPro
             aria-label="Like" className="p-1 text-muted-foreground hover:text-primary transition-colors">
             <Heart className="h-3.5 w-3.5" />
           </button>
-          <div className="relative">
+          <div className="relative" ref={menuRef}>
             <button type="button" onClick={() => setMenuOpen((v) => !v)}
               aria-label="More options"
               className="p-1 text-muted-foreground hover:text-foreground transition-colors">
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 top-full mt-1 z-10 w-44 rounded-lg border border-border bg-card shadow-lg py-1">
-                <button type="button"
-                  onClick={() => { setShowPlaylistModal(true); setMenuOpen(false); }}
-                  className="flex w-full items-center gap-2.5 px-3 py-2 text-xs text-foreground hover:bg-secondary transition-colors">
-                  <ListPlus className="h-3.5 w-3.5" /> Add to playlist
-                </button>
-              </div>
+              <TrackActionsMenu
+                track={track}
+                onClose={() => setMenuOpen(false)}
+                onAddToPlaylist={() => setShowPlaylistModal(true)}
+              />
             )}
           </div>
         </div>
@@ -133,36 +156,69 @@ interface TrackCardProps {
 
 export function TrackCard({ track, queue }: TrackCardProps) {
   const { isCurrent, isActive, handlePlay } = usePlayTrack(track, queue);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
 
   return (
-    <Link href={ROUTES.TRACK(track.id)} className="group block space-y-3">
-      <div className="relative aspect-square overflow-hidden rounded-md bg-secondary">
-        <CoverImage src={track.coverUrl} alt={track.title} type="track" size="xl" />
+    <div
+      className="relative group/card"
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setMenuOpen(true);
+      }}
+    >
+      <Link href={ROUTES.TRACK(track.id)} className="block space-y-3">
+        <div className="relative aspect-square overflow-hidden rounded-md bg-secondary">
+          <CoverImage src={track.coverUrl} alt={track.title} type="track" size="xl" />
+          <button
+            type="button"
+            onClick={(e) => { e.preventDefault(); handlePlay(); }}
+            aria-label={isActive ? 'Pause' : `Play ${track.title}`}
+            className={cn(
+              'absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full',
+              'bg-primary text-primary-foreground shadow-lg',
+              'translate-y-2 opacity-0 transition-all duration-200',
+              'group-hover/card:translate-y-0 group-hover/card:opacity-100',
+              isCurrent && 'translate-y-0 opacity-100',
+            )}
+          >
+            {isActive
+              ? <Pause className="h-4 w-4 fill-current" />
+              : <Play className="h-4 w-4 fill-current translate-x-px" />}
+          </button>
+        </div>
+        <div className="px-1">
+          <p className={cn('truncate text-sm font-medium', isCurrent && 'text-primary')}>
+            {track.title}
+          </p>
+          <p className="truncate text-xs text-muted-foreground mt-0.5">
+            {track.artist.stageName}
+          </p>
+        </div>
+      </Link>
+
+      {/* Context actions trigger */}
+      <div className="absolute top-2 left-2 z-10 opacity-0 transition-opacity group-hover/card:opacity-100">
         <button
           type="button"
-          onClick={(e) => { e.preventDefault(); handlePlay(); }}
-          aria-label={isActive ? 'Pause' : `Play ${track.title}`}
-          className={cn(
-            'absolute bottom-2 right-2 flex h-10 w-10 items-center justify-center rounded-full',
-            'bg-primary text-primary-foreground shadow-lg',
-            'translate-y-2 opacity-0 transition-all duration-200',
-            'group-hover:translate-y-0 group-hover:opacity-100',
-            isCurrent && 'translate-y-0 opacity-100',
-          )}
+          onClick={() => setMenuOpen(v => !v)}
+          aria-label="More options"
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur-sm hover:bg-background transition-colors"
         >
-          {isActive
-            ? <Pause className="h-4 w-4 fill-current" />
-            : <Play className="h-4 w-4 fill-current translate-x-px" />}
+          <MoreHorizontal className="h-4 w-4" />
         </button>
+        {menuOpen && (
+          <TrackActionsMenu
+            track={track}
+            onClose={() => setMenuOpen(false)}
+            onAddToPlaylist={() => setShowPlaylistModal(true)}
+          />
+        )}
       </div>
-      <div className="px-1">
-        <p className={cn('truncate text-sm font-medium', isCurrent && 'text-primary')}>
-          {track.title}
-        </p>
-        <p className="truncate text-xs text-muted-foreground mt-0.5">
-          {track.artist.stageName}
-        </p>
-      </div>
-    </Link>
+
+      {showPlaylistModal && (
+        <AddToPlaylistModal trackId={track.id} onClose={() => setShowPlaylistModal(false)} />
+      )}
+    </div>
   );
 }
