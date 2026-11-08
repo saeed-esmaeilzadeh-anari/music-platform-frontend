@@ -107,7 +107,7 @@ export function useServerPreferencesSync() {
         store.setAccent(server.accent);
         store.setReducedMotion(server.reducedMotion);
         store.setPrivacy({
-          showPlaylists: server.publicProfile,
+          publicProfile: server.publicProfile,
           showListeningActivity: server.showListeningActivity,
         });
         // release on the next tick so the store subscription sees a settled state
@@ -134,7 +134,7 @@ export function useServerPreferencesSync() {
           theme: (THEMES.includes(s.theme) ? s.theme : 'dark') as ThemeWire,
           accent: (ACCENTS.includes(s.accent) ? s.accent : 'emerald') as AccentWire,
           reducedMotion: s.reducedMotion,
-          publicProfile: s.privacy.showPlaylists,
+          publicProfile: s.privacy.publicProfile,
           showListeningActivity: s.privacy.showListeningActivity,
         };
         preferencesService

@@ -578,18 +578,22 @@ function NotificationsSection() {
 // ─── Privacy section ──────────────────────────────────────────────────────────
 
 const PRIVACY_ROWS: { key: keyof import('@/stores/preferences.store').PrivacyPrefs; label: string; hint: string }[] = [
-  { key: 'showListeningActivity', label: 'Listening activity',  hint: 'Let others see what you are playing'        },
-  { key: 'showPlaylists',         label: 'Public playlists',    hint: 'Show your public playlists on your profile' },
-  { key: 'showFavorites',         label: 'Favorites',           hint: 'Show your liked tracks on your profile'     },
-  { key: 'allowDataAnalytics',    label: 'Usage analytics',     hint: 'Help improve the platform with anonymous usage data' },
+  { key: 'publicProfile',         label: 'Public profile preference', hint: 'Saved to your account; public-profile visibility enforcement is not connected yet' },
+  { key: 'showListeningActivity', label: 'Listening activity', hint: 'Saved to your account; public activity filtering is not connected yet' },
+  { key: 'showPlaylists',         label: 'Public playlists', hint: 'Local only; this toggle does not change playlist access rules yet' },
+  { key: 'showFavorites',         label: 'Favorites', hint: 'Local only; this toggle does not change favorite access rules yet' },
+  { key: 'allowDataAnalytics',    label: 'Usage analytics', hint: 'Local only; analytics consent is not connected to the server yet' },
 ];
 
 function PrivacySection() {
   const { privacy, setPrivacy } = usePreferencesStore();
+  const { isAuthenticated } = useAuthStore();
 
   return (
-    <SectionCard title="Privacy" badge="local"
-      description="Control what others can see. These preferences are stored in your browser.">
+    <SectionCard title="Privacy" badge={isAuthenticated ? 'partly synced' : 'local'}
+      description={isAuthenticated
+        ? 'Profile and listening-activity preferences are saved to your account. Playlist, favorites and analytics settings remain local.'
+        : 'These settings are stored in this browser. Profile and listening-activity preferences can be saved to your account after sign-in.'}>
       <div className="space-y-4">
         {PRIVACY_ROWS.map(row => (
           <FieldRow key={row.key} label={row.label} hint={row.hint}>
@@ -598,7 +602,6 @@ function PrivacySection() {
           </FieldRow>
         ))}
       </div>
-      <LocalBadge />
     </SectionCard>
   );
 }
