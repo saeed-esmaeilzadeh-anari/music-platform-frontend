@@ -39,3 +39,7 @@ test('queue reordering preserves the current track and recalculates its index', 
   assert.match(player, /const nextIndex = state\.currentTrack[\s\S]*?next\.findIndex\(track => track\.id === state\.currentTrack\?\.id\)/);
   assert.match(player, /queue: next,[\s\S]*?queueIndex: nextIndex/);
 });
+
+test('clearing the queue resets transient playback state', () => {
+  assert.match(player, /clearQueue: \(\) => set\(\{[\s\S]*?queue: \[\],[\s\S]*?queueIndex: -1,[\s\S]*?currentTrack: null,[\s\S]*?isPlaying: false,[\s\S]*?isLoading: false,[\s\S]*?progressSec: 0,[\s\S]*?durationSec: 0,[\s\S]*?shuffledIndices: \[\]/);
+});
