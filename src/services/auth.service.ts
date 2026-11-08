@@ -3,13 +3,21 @@
  * Endpoints: POST /auth/register, /auth/login, /auth/refresh, /auth/logout, /auth/logout-all
  */
 
-import { apiPost, apiDelete } from "@/lib/api/http-client";
+import { apiGet, apiPost, apiDelete } from "@/lib/api/http-client";
 import type {
   AuthResponse,
   LoginDto,
   RegisterDto,
   RefreshTokenDto,
 } from "@/types";
+
+export interface ActiveSession {
+  id: string;
+  userAgent: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  expiresAt: string;
+}
 
 export const authService = {
   register: (dto: RegisterDto): Promise<AuthResponse> =>
@@ -25,4 +33,10 @@ export const authService = {
     apiPost<void>("/auth/logout", dto),
 
   logoutAll: (): Promise<void> => apiPost<void>("/auth/logout-all"),
+
+  listSessions: (): Promise<ActiveSession[]> =>
+    apiGet<ActiveSession[]>("/auth/sessions"),
+
+  revokeSession: (sessionId: string): Promise<void> =>
+    apiDelete<void>(`/auth/sessions/${encodeURIComponent(sessionId)}`),
 };

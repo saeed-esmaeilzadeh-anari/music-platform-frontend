@@ -11,7 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import { updateProfileSchema, type UpdateProfileFormValues } from '@/lib/validators';
 import { useMe, useUpdateMe } from '@/hooks/use-user-data';
-import { useLogoutAll } from '@/hooks/use-auth';
+import { useActiveSessions, useLogoutAll, useRevokeSession } from '@/hooks/use-auth';
 import { useDeleteAccount } from '@/hooks/use-account';
 import {
   usePreferencesStore,
@@ -280,16 +280,9 @@ function AccountSection() {
         </FieldRow>
       </SectionCard>
 
-      <SectionCard title="Sessions">
-        <FieldRow label="Active sessions"
-          hint="Sign out from all browsers and devices at once.">
-          <button type="button" onClick={() => logoutAll.mutate()} disabled={logoutAll.isPending}
-            className="flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50">
-            <LogOut className="h-4 w-4" />
-            {logoutAll.isPending ? 'Signing out…' : 'Sign out everywhere'}
-          </button>
-        </FieldRow>
-      </SectionCard>
+      <SessionManagement
+        logoutAll={logoutAll}
+      />
 
       <SectionCard title="Danger zone">
         <FieldRow label="Delete account"
@@ -325,6 +318,57 @@ function AccountSection() {
         </FieldRow>
       </SectionCard>
     </div>
+  );
+}
+
+function SessionManagement({ logoutAll }: { logoutAll: ReturnType<typeof useLogoutAll> }) {
+  const { data: sessions = [], isLoading, isError } = useActiveSessions();
+  const revokeSession = useRevokeSession();
+
+  return (
+    <SectionCard title="Sessions"
+      description="Review devices that can refresh your sign-in. Revoking a session prevents future token refreshes.">
+      <div className="space-y-3">
+        {isLoading && <p className="text-sm text-muted-foreground">Loading active sessions…</p>}
+        {isError && <p className="text-sm text-destructive">Could not load active sessions. Please try again.</p>}
+        {!isLoading && !isError && sessions.length === 0 && (
+          <p className="text-sm text-muted-foreground">No active sessions were found.</p>
+        )}
+        {sessions.map((session) => (
+          <div key={session.id} className="flex flex-col gap-3 rounded-lg border border-border p-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="min-w-0">
+              <p className="break-words text-sm font-medium text-foreground">
+                {session.userAgent || 'Unknown device'}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {session.ipAddress || 'IP unavailable'} · Signed in {new Date(session.createdAt).toLocaleString()}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Expires {new Date(session.expiresAt).toLocaleString()}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => revokeSession.mutate(session.id)}
+              disabled={revokeSession.isPending}
+              className="shrink-0 rounded-md border border-border px-3 py-2 text-xs font-medium text-foreground hover:bg-secondary disabled:opacity-50"
+            >
+              Revoke session
+            </button>
+          </div>
+        ))}
+      </div>
+      <div className="border-t border-border pt-4">
+        <FieldRow label="Sign out everywhere"
+          hint="Revoke every active refresh session for this account.">
+          <button type="button" onClick={() => logoutAll.mutate()} disabled={logoutAll.isPending}
+            className="flex items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50">
+            <LogOut className="h-4 w-4" />
+            {logoutAll.isPending ? 'Signing out…' : 'Sign out everywhere'}
+          </button>
+        </FieldRow>
+      </div>
+    </SectionCard>
   );
 }
 
@@ -390,11 +434,10 @@ function AppearanceSection() {
 
 // ─── Playback section ─────────────────────────────────────────────────────────
 
+// The current streaming API exposes one stable audio delivery route and does
+// not negotiate bitrate/codec variants. Do not advertise unsupported qualities.
 const QUALITY_OPTIONS: { value: AudioQuality; label: string; hint: string }[] = [
-  { value: 'auto',     label: 'Automatic', hint: 'Adjusts to your connection' },
-  { value: 'normal',   label: 'Normal',    hint: '~96 kbps'  },
-  { value: 'high',     label: 'High',      hint: '~320 kbps' },
-  { value: 'lossless', label: 'Lossless',  hint: 'FLAC — Premium only' },
+  { value: 'auto', label: 'Automatic', hint: 'Uses the available stream quality' },
 ];
 
 function PlaybackSection() {
